@@ -17,10 +17,10 @@
                 <h3>Cadastros de admin</h3>
                 <button class="btn btn-ghost" type="button" id="staff-close">Fechar</button>
             </div>
-            <p class="staff-hint">Quem pede acesso aparece aqui. Aceite para liberar o botão Editar, ou recuse. Ao aceitar, você pode criar uma senha provisória para a pessoa.</p>
+            <p class="staff-hint">Quem pede acesso aparece aqui. O dono pode definir Admin ou Ilegal. Os admins só podem aceitar no cargo Ilegal.</p>
             <h4>Pedidos pendentes</h4>
             <div id="staff-pending"></div>
-            <h4>Admins aprovados</h4>
+            <h4>Contas aprovadas</h4>
             <div id="staff-admins"></div>
             <h4>Recusados</h4>
             <div id="staff-refused"></div>
@@ -48,28 +48,28 @@
             </form>
         </div>
     </div>
-    <div id="account-panel" class="staff-panel" hidden>
-        <div class="staff-panel-inner">
-            <div class="staff-panel-head">
-                <h3>Minha conta</h3>
-                <button class="btn btn-ghost" type="button" id="account-close">Fechar</button>
-            </div>
-            <p class="staff-hint" id="account-hint">Altere seu e-mail ou sua senha. A senha atual é obrigatória para confirmar.</p>
-            <form id="account-form">
-                <label for="account-email">E-mail</label>
-                <input id="account-email" name="email" type="email" autocomplete="username" required>
-                <label for="account-current">Senha atual</label>
-                <input id="account-current" name="current" type="password" autocomplete="current-password" required>
-                <label for="account-password">Nova senha</label>
-                <input id="account-password" name="password" type="password" autocomplete="new-password" placeholder="Deixe em branco para não trocar">
-                <label for="account-password-confirm">Confirmar nova senha</label>
-                <input id="account-password-confirm" name="confirm" type="password" autocomplete="new-password">
-                <p id="account-error" class="login-error" hidden></p>
-                <div class="modal-actions">
-                    <button class="btn" type="submit">Salvar</button>
-                </div>
-            </form>
+    <div id="account-panel" class="account-popover" hidden>
+        <div class="staff-panel-head">
+            <h3>Minha conta</h3>
+            <button class="btn btn-ghost" type="button" id="account-close">Fechar</button>
         </div>
+        <p class="staff-hint" id="account-hint">Crie uma senha, altere a senha ou troque o e-mail.</p>
+        <form id="account-form">
+            <label for="account-email">E-mail</label>
+            <input id="account-email" name="email" type="email" autocomplete="username" required>
+            <div id="account-current-wrap">
+                <label for="account-current">Senha atual</label>
+                <input id="account-current" name="current" type="password" autocomplete="current-password">
+            </div>
+            <label for="account-password" id="account-password-label">Nova senha</label>
+            <input id="account-password" name="password" type="password" autocomplete="new-password" placeholder="Deixe em branco para não trocar">
+            <label for="account-password-confirm" id="account-password-confirm-label">Confirmar nova senha</label>
+            <input id="account-password-confirm" name="confirm" type="password" autocomplete="new-password">
+            <p id="account-error" class="login-error" hidden></p>
+            <div class="modal-actions">
+                <button class="btn" type="submit">Salvar</button>
+            </div>
+        </form>
     </div>
     <div class="modal-backdrop" id="modal">
         <div class="modal">

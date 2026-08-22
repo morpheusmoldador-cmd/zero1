@@ -55,6 +55,7 @@ function defaultSite() {
     vipStoreUrl: "",
     vipStoreLabel: "LOJA VIP",
     connectText: "",
+    ilegalInfo: emptyIlegalInfo(),
     updatedAt: new Date().toISOString(),
   };
 }
@@ -102,6 +103,62 @@ function sanitizeConnectText(text) {
     .slice(0, 200);
 }
 
+const ILEGAL_GROUPS = ["favela", "qg", "gueto"];
+const ILEGAL_FIELD_KEYS = ["nome", "lider", "vice", "discord", "connect"];
+
+function emptyIlegalInfo() {
+  return { favela: [], qg: [], gueto: [] };
+}
+
+function sanitizePhotoUrl(url) {
+  const raw = String(url || "").trim().slice(0, 500);
+  if (!raw) return "";
+  if (raw.startsWith("/uploads/")) return raw;
+  return sanitizeVipUrl(raw);
+}
+
+function sanitizeIlegalOrg(org, index) {
+  const name = String((org && org.name) || "Organização")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 60) || "Organização";
+  const id = String((org && org.id) || "")
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "")
+    .slice(0, 40) || `org-${index + 1}`;
+  const photos = Array.isArray(org && org.photos) ? org.photos : [];
+  const fields = (org && org.fields) || {};
+  const cleanFields = {};
+  ILEGAL_FIELD_KEYS.forEach((key) => {
+    cleanFields[key] = String(fields[key] || "").replace(/\s+/g, " ").trim().slice(0, 200);
+  });
+  return {
+    id,
+    name,
+    photos: [0, 1, 2, 3, 4].map((i) => sanitizePhotoUrl(photos[i] || "")),
+    fields: cleanFields,
+  };
+}
+
+function sanitizeIlegalInfo(raw) {
+  const src = raw && typeof raw === "object" ? raw : {};
+  const out = emptyIlegalInfo();
+  ILEGAL_GROUPS.forEach((group) => {
+    const list = Array.isArray(src[group]) ? src[group] : [];
+    const used = new Set();
+    out[group] = list.slice(0, 40).map((org, index) => {
+      const clean = sanitizeIlegalOrg(org, index);
+      let id = clean.id;
+      let n = 2;
+      while (used.has(id)) id = `${clean.id}-${n++}`;
+      used.add(id);
+      clean.id = id;
+      return clean;
+    });
+  });
+  return out;
+}
+
 function saveSite(site) {
   ensureDirs();
   const current = fs.existsSync(SITE_PATH)
@@ -119,6 +176,7 @@ function saveSite(site) {
     vipStoreUrl: sanitizeVipUrl(site.vipStoreUrl != null ? site.vipStoreUrl : current.vipStoreUrl),
     vipStoreLabel: sanitizeVipLabel(site.vipStoreLabel != null ? site.vipStoreLabel : current.vipStoreLabel),
     connectText: sanitizeConnectText(site.connectText != null ? site.connectText : current.connectText),
+    ilegalInfo: sanitizeIlegalInfo(site.ilegalInfo != null ? site.ilegalInfo : current.ilegalInfo),
     updatedAt: new Date().toISOString(),
   };
   const tmp = SITE_PATH + ".tmp";
@@ -134,5 +192,9 @@ module.exports = {
   loadSite,
   saveSite,
   sanitizeVipUrl,
+  sanitizeIlegalInfo,
+  emptyIlegalInfo,
+  ILEGAL_GROUPS,
+  ILEGAL_FIELD_KEYS,
   ensureDirs,
 };

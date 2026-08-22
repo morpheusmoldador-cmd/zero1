@@ -1,7 +1,15 @@
+function tabIdFromHash() {
+    const raw = (window.location.hash || "#inicio").replace("#", "") || "inicio";
+    const el = document.getElementById(raw);
+    if (el && el.classList.contains("tab-content")) return raw;
+    const main = raw.split("-")[0];
+    if (document.getElementById(main)) return main;
+    return "inicio";
+}
+
 function handleRouting() {
-    let hash = window.location.hash || "#inicio";
-    let mainTabId = hash.split("-")[0].replace("#", "");
-    if (!document.getElementById(mainTabId)) mainTabId = "inicio";
+    const mainTabId = tabIdFromHash();
+    if (!document.getElementById(mainTabId)) return;
 
     document.querySelectorAll(".tab-content").forEach((tab) => tab.classList.remove("active"));
     document.querySelectorAll("nav a:not([data-vip-button]):not([data-login-button])").forEach((link) => link.classList.remove("active"));
@@ -14,7 +22,7 @@ function handleRouting() {
 
         const firstSubLink = targetTab.querySelector(".submenu a");
         const activeSub = targetTab.querySelector(".subtab-content.active");
-        if (firstSubLink && !activeSub) firstSubLink.click();
+        if (firstSubLink && !activeSub && mainTabId !== "info-ilegal") firstSubLink.click();
     }
 
     ensureCalcFooter();

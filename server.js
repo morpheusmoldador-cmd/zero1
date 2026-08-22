@@ -6,7 +6,7 @@ const express = require("express");
 const session = require("express-session");
 const cookieSession = require("cookie-session");
 const multer = require("multer");
-const { loadSite, saveSite, ensureDirs, UPLOADS_DIR, DATA_DIR } = require("./src/store");
+const { loadSite, saveSite, ensureDirs, UPLOADS_DIR, DATA_DIR, sanitizeIlegalInfo } = require("./src/store");
 const { FileSessionStore } = require("./src/sessionStore");
 const {
   sessionSecret,
@@ -15,9 +15,10 @@ const {
   toPublicUser,
   requireLogin,
   requireAdmin,
-  requireOwner,
+  requireStaff,
   redirectUri,
   usesEmailAuth,
+  isStaff,
 } = require("./src/auth");
 const {
   requestAdmin,
@@ -25,6 +26,7 @@ const {
   loginWithPassword,
   decideRequest,
   removeAdmin,
+  setStaffRole,
   changePassword,
   changeEmail,
   listForOwner,
@@ -113,16 +115,20 @@ app.get("/api/me", (req, res) => {
   res.json(toPublicUser(req.session.user));
 });
 
-app.get("/api/site", (_req, res) => {
+app.get("/api/site", (req, res) => {
   const site = loadSite();
-  res.json({
+  const payload = {
     title: site.title,
     html: site.html,
     vipStoreUrl: site.vipStoreUrl || "",
     vipStoreLabel: site.vipStoreLabel || "LOJA VIP",
     connectText: site.connectText || "",
     updatedAt: site.updatedAt,
-  });
+  };
+  if (req.session?.user && isStaff(req.session.user.id)) {
+    payload.ilegalInfo = site.ilegalInfo || { favela: [], qg: [], gueto: [] };
+  }
+  res.json(payload);
 });
 
 app.put("/api/site", requireAdmin, (req, res) => {
@@ -136,6 +142,7 @@ app.put("/api/site", requireAdmin, (req, res) => {
     vipStoreUrl: req.body.vipStoreUrl != null ? req.body.vipStoreUrl : current.vipStoreUrl,
     vipStoreLabel: req.body.vipStoreLabel != null ? req.body.vipStoreLabel : current.vipStoreLabel,
     connectText: req.body.connectText != null ? req.body.connectText : current.connectText,
+    ilegalInfo: req.body.ilegalInfo != null ? req.body.ilegalInfo : current.ilegalInfo,
   });
   res.json({
     ok: true,
@@ -143,10 +150,24 @@ app.put("/api/site", requireAdmin, (req, res) => {
     vipStoreUrl: saved.vipStoreUrl,
     vipStoreLabel: saved.vipStoreLabel,
     connectText: saved.connectText,
+    ilegalInfo: saved.ilegalInfo,
   });
 });
 
-app.post("/api/upload", requireAdmin, (req, res) => {
+app.put("/api/ilegal", requireStaff, (req, res) => {
+  const current = loadSite();
+  const saved = saveSite({
+    html: current.html,
+    title: current.title,
+    vipStoreUrl: current.vipStoreUrl,
+    vipStoreLabel: current.vipStoreLabel,
+    connectText: current.connectText,
+    ilegalInfo: sanitizeIlegalInfo(req.body.ilegalInfo),
+  });
+  res.json({ ok: true, updatedAt: saved.updatedAt, ilegalInfo: saved.ilegalInfo });
+});
+
+app.post("/api/upload", requireStaff, (req, res) => {
   upload.single("file")(req, res, (err) => {
     if (err) return res.status(400).json({ error: err.message || "Upload inválido" });
     if (!req.file) return res.status(400).json({ error: "Nenhum arquivo enviado" });
@@ -160,33 +181,43 @@ app.post("/api/admin/request", requireLogin, (req, res) => {
   res.json({ ok: true, requestStatus: "pending" });
 });
 
-app.get("/api/admin/requests", requireOwner, (_req, res) => {
+app.get("/api/admin/requests", requireAdmin, (_req, res) => {
   res.json(listForOwner());
 });
 
-app.post("/api/admin/decide", requireOwner, (req, res) => {
+app.post("/api/admin/decide", requireAdmin, (req, res) => {
   const action = String(req.body?.action || "");
   const id = String(req.body?.id || "");
   const password = String(req.body?.password || "").trim();
-  const result = action === "remove" ? removeAdmin(id) : decideRequest(id, action, password);
+  const actorId = req.session.user.id;
+  let result;
+  if (action === "remove") result = removeAdmin(id, actorId);
+  else if (action === "role") result = setStaffRole(id, req.body?.role, actorId);
+  else result = decideRequest(id, action, password, req.body?.role, actorId);
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true, ...listForOwner(), provisionalPassword: result.provisionalPassword || "" });
 });
 
-app.post("/api/admin/requests/:id/accept", requireOwner, (req, res) => {
-  const result = decideRequest(decodeURIComponent(req.params.id), "accept", req.body?.password);
+app.post("/api/admin/requests/:id/accept", requireAdmin, (req, res) => {
+  const result = decideRequest(
+    decodeURIComponent(req.params.id),
+    "accept",
+    req.body?.password,
+    req.body?.role,
+    req.session.user.id
+  );
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true, ...listForOwner(), provisionalPassword: result.provisionalPassword || "" });
 });
 
-app.post("/api/admin/requests/:id/refuse", requireOwner, (req, res) => {
-  const result = decideRequest(decodeURIComponent(req.params.id), "refuse");
+app.post("/api/admin/requests/:id/refuse", requireAdmin, (req, res) => {
+  const result = decideRequest(decodeURIComponent(req.params.id), "refuse", "", "", req.session.user.id);
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true, ...listForOwner() });
 });
 
-app.post("/api/admin/admins/:id/remove", requireOwner, (req, res) => {
-  const result = removeAdmin(decodeURIComponent(req.params.id));
+app.post("/api/admin/admins/:id/remove", requireAdmin, (req, res) => {
+  const result = removeAdmin(decodeURIComponent(req.params.id), req.session.user.id);
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true, ...listForOwner() });
 });

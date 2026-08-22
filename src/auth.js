@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { isApprovedAdmin, getRequest, getAccount, pendingCount } = require("./staff");
+const { getRequest, getAccount, getAdminRole, pendingCount } = require("./staff");
 
 const OWNER_ID = process.env.OWNER_ID || "1228740417839824968";
 const OWNER_EMAIL = String(process.env.OWNER_EMAIL || "morpheus.moldador@gmail.com")
@@ -37,10 +37,23 @@ function isOwner(userId) {
   return id === ownerIdentity();
 }
 
-function isAdmin(userId) {
+function isFullAdmin(userId) {
   if (!userId) return false;
   const id = usesEmailAuth() ? normalizeEmail(userId) : String(userId);
-  return isOwner(id) || extraAdminIds().includes(String(userId)) || extraAdminIds().includes(id) || isApprovedAdmin(id);
+  if (isOwner(id)) return true;
+  if (extraAdminIds().includes(String(userId)) || extraAdminIds().includes(id)) return true;
+  return getAdminRole(id) === "admin";
+}
+
+function isStaff(userId) {
+  if (!userId) return false;
+  const id = usesEmailAuth() ? normalizeEmail(userId) : String(userId);
+  if (isFullAdmin(id)) return true;
+  return getAdminRole(id) === "ilegal";
+}
+
+function isAdmin(userId) {
+  return isFullAdmin(userId);
 }
 
 function avatarUrl(user) {
@@ -144,19 +157,25 @@ async function exchangeCode(code, req) {
 
 function toPublicUser(sessionUser) {
   const authMode = usesEmailAuth() ? "email" : "discord";
-  if (!sessionUser) return { loggedIn: false, canEdit: false, isOwner: false, authMode };
+  if (!sessionUser) return { loggedIn: false, canEdit: false, canEditIlegal: false, isOwner: false, authMode };
   const request = getRequest(sessionUser.id);
   const account = getAccount(sessionUser.id);
+  const role = isOwner(sessionUser.id) ? "owner" : getAdminRole(sessionUser.id) || "none";
   return {
     loggedIn: true,
-    canEdit: isAdmin(sessionUser.id),
+    canEdit: isFullAdmin(sessionUser.id),
+    canEditIlegal: isStaff(sessionUser.id),
     id: sessionUser.id,
     email: sessionUser.email || sessionUser.id,
     username: sessionUser.global_name || sessionUser.username,
     avatar: avatarUrl(sessionUser),
     isOwner: isOwner(sessionUser.id),
-    requestStatus: isAdmin(sessionUser.id) ? "admin" : (request && request.status) || "none",
-    pendingCount: isOwner(sessionUser.id) ? pendingCount() : 0,
+    role,
+    hasPassword: Boolean(account && account.passwordHash),
+    requestStatus: isStaff(sessionUser.id) ? role : (request && request.status) || "none",
+    pendingCount: isFullAdmin(sessionUser.id) ? pendingCount() : 0,
+    canManageStaff: isFullAdmin(sessionUser.id),
+    canSetAdminRole: isOwner(sessionUser.id),
     mustChangePassword: Boolean(account && account.mustChangePassword),
     authMode,
   };
@@ -170,8 +189,15 @@ function requireLogin(req, res, next) {
 }
 
 function requireAdmin(req, res, next) {
-  if (!req.session?.user || !isAdmin(req.session.user.id)) {
+  if (!req.session?.user || !isFullAdmin(req.session.user.id)) {
     return res.status(403).json({ error: "Somente o dono/admin pode editar." });
+  }
+  next();
+}
+
+function requireStaff(req, res, next) {
+  if (!req.session?.user || !isStaff(req.session.user.id)) {
+    return res.status(403).json({ error: "Somente a administração pode acessar." });
   }
   next();
 }
@@ -192,6 +218,8 @@ module.exports = {
   ownerIdentity,
   isOwner,
   isAdmin,
+  isFullAdmin,
+  isStaff,
   avatarUrl,
   userFromEmail,
   publicUrl,
@@ -202,5 +230,6 @@ module.exports = {
   toPublicUser,
   requireLogin,
   requireAdmin,
+  requireStaff,
   requireOwner,
 };

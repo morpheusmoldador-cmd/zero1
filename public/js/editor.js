@@ -3,6 +3,27 @@
   let snapshot = "";
   let selected = null;
   let me = { loggedIn: false, canEdit: false };
+  let ilegalInfo = { favela: [], qg: [], gueto: [] };
+  const ILEGAL_GROUPS = [
+    { id: "favela", label: "FAVELA" },
+    { id: "qg", label: "QG" },
+    { id: "gueto", label: "GUETO" },
+  ];
+  const ILEGAL_FIELDS = [
+    { key: "nome", label: "Nome" },
+    { key: "lider", label: "Líder" },
+    { key: "vice", label: "Vice" },
+    { key: "discord", label: "Discord" },
+    { key: "connect", label: "Connect" },
+  ];
+
+  function canEditSite() {
+    return Boolean(me.isOwner || me.role === "admin" || (me.canEdit && me.role !== "ilegal"));
+  }
+
+  function canEditIlegalContent() {
+    return Boolean(me.isOwner || me.canEdit || me.canEditIlegal || me.role === "admin" || me.role === "ilegal");
+  }
   let siteTitle = document.title;
   let vipStoreUrl = "";
   let vipStoreLabel = "LOJA VIP";
@@ -62,8 +83,12 @@
 
   function setEditable(on) {
     document.querySelectorAll(`#site-root ${TEXT_TAGS}`).forEach((el) => {
-      if (el.closest(".calculator-footer, #connect-box, [data-connect-box]")) return;
-      if (el.closest("[data-vip-button]")) {
+      if (el.closest(".calculator-footer, #connect-box, [data-connect-box], .ilegal-field, .ilegal-copy, .ilegal-photos")) return;
+      if (el.closest("[data-vip-button], [data-ilegal-nav]")) {
+        el.removeAttribute("contenteditable");
+        return;
+      }
+      if (on && !canEditSite() && !el.closest("#info-ilegal")) {
         el.removeAttribute("contenteditable");
         return;
       }
@@ -72,9 +97,12 @@
     });
     const connectValue = document.getElementById("connect-value");
     if (connectValue && connectValue.tagName === "INPUT") {
-      connectValue.readOnly = !on || !me.canEdit;
-      if (on && me.canEdit) connectValue.removeAttribute("readonly");
+      connectValue.readOnly = !on || !canEditSite();
+      if (on && canEditSite()) connectValue.removeAttribute("readonly");
     }
+    document.querySelectorAll(".ilegal-value").forEach((input) => {
+      input.readOnly = !on || !canEditIlegalContent();
+    });
   }
 
   function openModal(title, fields) {
@@ -83,13 +111,21 @@
       document.getElementById("modal-title").textContent = title;
       const box = document.getElementById("modal-fields");
       box.innerHTML = fields
-        .map(
-          (f) =>
-            `<label>${f.label}</label><input id="f-${f.name}" value="${String(f.value || "").replace(/"/g, "&quot;")}"${f.placeholder ? ` placeholder="${String(f.placeholder).replace(/"/g, "&quot;")}"` : ""}>`
-        )
+        .map((f) => {
+          if (f.type === "select") {
+            const opts = (f.options || [])
+              .map(
+                (o) =>
+                  `<option value="${String(o.value).replace(/"/g, "&quot;")}"${String(o.value) === String(f.value) ? " selected" : ""}>${escapeHtml(o.label)}</option>`
+              )
+              .join("");
+            return `<label>${f.label}</label><select id="f-${f.name}">${opts}</select>`;
+          }
+          return `<label>${f.label}</label><input id="f-${f.name}" value="${String(f.value || "").replace(/"/g, "&quot;")}"${f.placeholder ? ` placeholder="${String(f.placeholder).replace(/"/g, "&quot;")}"` : ""}>`;
+        })
         .join("");
       backdrop.classList.add("open");
-      const first = box.querySelector("input");
+      const first = box.querySelector("input, select");
       if (first) setTimeout(() => first.focus(), 0);
       const ok = () => {
         const values = {};
@@ -279,13 +315,16 @@
   function refreshChrome() {
     stripChrome();
     if (!document.body.classList.contains("editing")) return;
-    mountCardComposer();
-    mountTableChrome();
-    mountButtonChrome();
-    mountNavChrome();
-    mountSubmenuChrome();
-    mountCardRemovers();
-    mountLineChrome();
+    if (canEditSite()) {
+      mountCardComposer();
+      mountTableChrome();
+      mountButtonChrome();
+      mountNavChrome();
+      mountSubmenuChrome();
+      mountCardRemovers();
+      mountLineChrome();
+    }
+    mountIlegalChrome();
   }
 
   function mountCardComposer() {
@@ -355,7 +394,7 @@
 
   function mountButtonChrome() {
     document.querySelectorAll("#site-root .card").forEach((card) => {
-      if (card.closest(".calculator-footer")) return;
+      if (card.closest(".calculator-footer") || card.closest("#info-ilegal")) return;
       const buttons = [...card.querySelectorAll("a.btn")].filter(
         (btn) => !btn.closest("[data-chrome]") && !btn.dataset.vipButton && !btn.dataset.loginButton
       );
@@ -377,7 +416,7 @@
     const nav = document.querySelector(".nav-container");
     if (!nav) return;
     [...nav.querySelectorAll("a[href^='#']")].forEach((a) => {
-      if (a.dataset.vipButton || a.dataset.loginButton) return;
+      if (a.dataset.vipButton || a.dataset.loginButton || a.dataset.ilegalNav) return;
       const href = a.getAttribute("href") || "";
       if (href === "#inicio") return;
       const chip = document.createElement("span");
@@ -394,6 +433,7 @@
 
   function mountSubmenuChrome() {
     document.querySelectorAll("#site-root .submenu").forEach((menu) => {
+      if (menu.closest("#info-ilegal")) return;
       const links = [...menu.querySelectorAll(":scope > a")];
       links.forEach((a) => {
         const chip = document.createElement("span");
@@ -408,7 +448,7 @@
 
   function mountCardRemovers() {
     document.querySelectorAll("#site-root .card").forEach((card) => {
-      if (card.closest(".calculator-footer")) return;
+      if (card.closest(".calculator-footer") || card.closest("#info-ilegal")) return;
       card.appendChild(makeRemove("card"));
     });
   }
@@ -541,6 +581,7 @@
     if (type === "button") return addButtonNear(btn);
     if (type === "tab") return addTab();
     if (type === "subtab") return addSubtabIn(btn.closest(".submenu"));
+    if (type === "ilegal-org") return addIlegalOrg(btn.dataset.ilegalGroup || activeIlegalGroup());
   }
 
   async function handleRemove(btn) {
@@ -569,6 +610,9 @@
       const page = document.getElementById(id);
       if (page) page.remove();
       if (location.hash.replace("#", "") === id) location.hash = "#inicio";
+    } else if (type === "ilegal-org") {
+      await removeIlegalOrg(btn.dataset.ilegalGroup, btn.dataset.ilegalOrg);
+      return;
     } else if (type === "subtab") {
       const wrap = btn.closest(".edit-chip");
       const a = wrap && wrap.previousElementSibling;
@@ -670,7 +714,7 @@
     const root = document.getElementById("site-root");
     root.querySelectorAll(".is-selected").forEach((el) => el.classList.remove("is-selected"));
     root.querySelectorAll("[contenteditable]").forEach((el) => el.removeAttribute("contenteditable"));
-    root.querySelectorAll("[data-vip-button], [data-connect-box], [data-login-button], [data-composer], [data-chrome]").forEach((el) => el.remove());
+    root.querySelectorAll("[data-vip-button], [data-connect-box], [data-login-button], [data-composer], [data-chrome], [data-ilegal-nav], #info-ilegal").forEach((el) => el.remove());
     return root.innerHTML;
   }
 
@@ -798,6 +842,329 @@
     }
   }
 
+  async function copyText(text) {
+    const value = String(text || "").trim();
+    if (!value) return toast("Nada para copiar.");
+    try {
+      await navigator.clipboard.writeText(value);
+      toast("Copiado");
+    } catch {
+      const area = document.createElement("textarea");
+      area.value = value;
+      area.setAttribute("readonly", "");
+      area.style.position = "fixed";
+      area.style.left = "-9999px";
+      document.body.appendChild(area);
+      area.select();
+      document.execCommand("copy");
+      area.remove();
+      toast("Copiado");
+    }
+  }
+
+  function parkIlegal() {
+    document.querySelectorAll("[data-ilegal-nav], #info-ilegal").forEach((el) => el.remove());
+  }
+
+  function activeIlegalGroup() {
+    const pane = document.querySelector("#info-ilegal .subtab-content.active");
+    return (pane && pane.dataset.ilegalGroupPane) || "favela";
+  }
+
+  function currentIlegalView() {
+    const group = activeIlegalGroup();
+    const orgPane = document.querySelector("#info-ilegal .ilegal-org-page.active");
+    const active = document.activeElement;
+    const fromField = Boolean(active && active.classList && active.classList.contains("ilegal-value"));
+    return {
+      group,
+      orgId: (orgPane && orgPane.dataset.ilegalOrgPane) || "",
+      field: fromField ? active.dataset.ilegalField : "",
+      caret: fromField && typeof active.selectionStart === "number" ? active.selectionStart : null,
+    };
+  }
+
+  function restoreIlegalView(view) {
+    if (!view) return;
+    if (view.group) showIlegalGroup(view.group, view.orgId);
+    if (view.field && view.orgId) {
+      const input = document.querySelector(
+        `.ilegal-value[data-ilegal-org="${view.orgId}"][data-ilegal-field="${view.field}"]`
+      );
+      if (input) {
+        input.focus();
+        if (view.caret != null) {
+          try {
+            input.setSelectionRange(view.caret, view.caret);
+          } catch {
+            /* ignore */
+          }
+        }
+      }
+    }
+  }
+
+  function findIlegalOrg(group, orgId) {
+    return ((ilegalInfo[group] || []).find((org) => org.id === orgId)) || null;
+  }
+
+  function mountIlegalChrome() {
+    const root = document.getElementById("info-ilegal");
+    if (!root || !document.body.classList.contains("editing") || !canEditIlegalContent()) return;
+    root.querySelectorAll("[data-ilegal-orgs]").forEach((menu) => {
+      const group = menu.dataset.ilegalOrgs;
+      menu.querySelectorAll(":scope > a").forEach((a) => {
+        if (a.nextElementSibling && a.nextElementSibling.dataset.chrome) return;
+        const chip = document.createElement("span");
+        chip.className = "edit-chip";
+        chip.dataset.chrome = "1";
+        const btn = makeRemove("ilegal-org");
+        btn.dataset.ilegalGroup = group;
+        btn.dataset.ilegalOrg = a.dataset.ilegalOrg || "";
+        chip.appendChild(btn);
+        a.after(chip);
+      });
+      if (!menu.querySelector('[data-plus="ilegal-org"]')) {
+        const plus = makePlus("ilegal-org", "Nova organização");
+        plus.dataset.ilegalGroup = group;
+        menu.appendChild(plus);
+      }
+    });
+  }
+
+  function renderIlegalSection() {
+    const view = currentIlegalView();
+    parkIlegal();
+    if (!canEditIlegalContent()) return;
+    const nav = document.querySelector(".nav-container") || document.querySelector("nav");
+    const container = document.querySelector("#site-root .container") || document.querySelector(".container");
+    if (!nav || !container) return;
+
+    const link = document.createElement("a");
+    link.href = "#info-ilegal";
+    link.id = "link-info-ilegal";
+    link.dataset.ilegalNav = "1";
+    link.textContent = "INFO ILEGAL";
+    const vip = document.getElementById("btn-loja-vip-nav");
+    if (vip) vip.before(link);
+    else {
+      const bar = document.getElementById("admin-bar");
+      if (bar && bar.parentElement === nav) bar.before(link);
+      else nav.appendChild(link);
+    }
+
+    const page = document.createElement("div");
+    page.id = "info-ilegal";
+    page.className = "tab-content";
+    page.dataset.ilegalRoot = "1";
+    page.innerHTML = `<h1>INFO ILEGAL</h1>
+      <div class="submenu" data-ilegal-groups>
+        ${ILEGAL_GROUPS.map((g) => `<a href="#info-ilegal" data-ilegal-group="${g.id}">${g.label}</a>`).join("")}
+      </div>
+      ${ILEGAL_GROUPS.map((g) => `<div class="subtab-content" data-ilegal-group-pane="${g.id}">
+        <div class="submenu" data-ilegal-orgs="${g.id}"></div>
+        <div data-ilegal-org-panes="${g.id}"></div>
+      </div>`).join("")}`;
+    container.appendChild(page);
+
+    ILEGAL_GROUPS.forEach((g) => renderIlegalGroup(g.id));
+    const keepGroup = view.group && page.querySelector(`[data-ilegal-group-pane="${view.group}"]`) ? view.group : "";
+    if (keepGroup) {
+      showIlegalGroup(keepGroup);
+      if (view.orgId) showIlegalOrg(keepGroup, view.orgId);
+    } else {
+      const firstGroup = page.querySelector("[data-ilegal-group]");
+      if (firstGroup) firstGroup.classList.add("active");
+      const firstPane = page.querySelector("[data-ilegal-group-pane]");
+      if (firstPane) firstPane.classList.add("active");
+      const firstOrg = page.querySelector("[data-ilegal-group-pane].active [data-ilegal-org]");
+      if (firstOrg) showIlegalOrg(firstOrg.dataset.ilegalGroup, firstOrg.dataset.ilegalOrg);
+    }
+
+    page.addEventListener("click", onIlegalClick);
+    page.addEventListener("input", onIlegalInput);
+    if (window.location.hash === "#info-ilegal" && window.handleRouting) window.handleRouting();
+    if (document.body.classList.contains("editing")) {
+      setEditable(true);
+      mountIlegalChrome();
+    }
+    restoreIlegalView({ ...view, group: keepGroup || view.group });
+  }
+
+  function renderIlegalGroup(group) {
+    const menu = document.querySelector(`[data-ilegal-orgs="${group}"]`);
+    const panes = document.querySelector(`[data-ilegal-org-panes="${group}"]`);
+    if (!menu || !panes) return;
+    const orgs = ilegalInfo[group] || [];
+    menu.innerHTML = orgs
+      .map((org) => `<a href="#info-ilegal" data-ilegal-org="${escapeHtml(org.id)}" data-ilegal-group="${group}">${escapeHtml(org.name)}</a>`)
+      .join("");
+    panes.innerHTML = orgs.map((org) => ilegalOrgHtml(group, org)).join("");
+    if (!orgs.length) {
+      panes.innerHTML = `<div class="card"><p>Nenhuma organização nesta aba ainda.</p></div>`;
+    }
+  }
+
+  function ilegalOrgHtml(group, org) {
+    const photos = org.photos || [];
+    const photoBoxes = [0, 1, 2, 3, 4]
+      .map((i) => {
+        const src = photos[i] || "";
+        return `<div class="ilegal-photo-slot card" data-ilegal-photo="${i}" data-ilegal-group="${group}" data-ilegal-org="${escapeHtml(org.id)}">
+          ${src ? `<img src="${escapeHtml(src)}" alt="Foto ${i + 1}" class="action-img ilegal-photo">` : `<div class="ilegal-photo-empty">Foto ${i + 1}</div>`}
+        </div>`;
+      })
+      .join("");
+    const fields = ILEGAL_FIELDS.map((field) => {
+      const value = (org.fields && org.fields[field.key]) || "";
+      return `<div class="ilegal-field">
+        <span class="ilegal-label">${field.label}</span>
+        <input class="ilegal-value connect-value" data-ilegal-field="${field.key}" data-ilegal-group="${group}" data-ilegal-org="${escapeHtml(org.id)}" value="${escapeHtml(value)}" placeholder="Cole ou escreva" autocomplete="off" readonly>
+        <button class="btn btn-copy ilegal-copy" type="button" data-copy="${escapeHtml(value)}"${value ? "" : " disabled"}>Copiar</button>
+      </div>`;
+    }).join("");
+    return `<div class="subsubtab-content ilegal-org-page" data-ilegal-org-pane="${escapeHtml(org.id)}" data-ilegal-group="${group}">
+      <h3>${escapeHtml(org.name)}</h3>
+      <div class="ilegal-photos">${photoBoxes}</div>
+      <div class="card ilegal-info-card">${fields}</div>
+    </div>`;
+  }
+
+  function showIlegalGroup(group, orgId) {
+    const root = document.getElementById("info-ilegal");
+    if (!root) return;
+    root.querySelectorAll("a[data-ilegal-group]:not([data-ilegal-org])").forEach((a) => a.classList.toggle("active", a.dataset.ilegalGroup === group));
+    root.querySelectorAll("[data-ilegal-group-pane]").forEach((pane) => pane.classList.toggle("active", pane.dataset.ilegalGroupPane === group));
+    const first = root.querySelector(`[data-ilegal-group-pane="${group}"] [data-ilegal-org]`);
+    const chosen = orgId || (first && first.dataset.ilegalOrg);
+    if (chosen) showIlegalOrg(group, chosen);
+  }
+
+  function showIlegalOrg(group, orgId) {
+    const paneWrap = document.querySelector(`[data-ilegal-org-panes="${group}"]`);
+    const menu = document.querySelector(`[data-ilegal-orgs="${group}"]`);
+    if (!paneWrap || !menu) return;
+    menu.querySelectorAll("[data-ilegal-org]").forEach((a) => a.classList.toggle("active", a.dataset.ilegalOrg === orgId));
+    paneWrap.querySelectorAll("[data-ilegal-org-pane]").forEach((pane) => pane.classList.toggle("active", pane.dataset.ilegalOrgPane === orgId));
+  }
+
+  function onIlegalClick(e) {
+    const copyBtn = e.target.closest(".ilegal-copy");
+    if (copyBtn) {
+      e.preventDefault();
+      if (copyBtn.disabled) return;
+      const input = copyBtn.parentElement && copyBtn.parentElement.querySelector(".ilegal-value");
+      copyText(input ? input.value : copyBtn.dataset.copy);
+      return;
+    }
+    const photo = e.target.closest("[data-ilegal-photo]");
+    if (photo && document.body.classList.contains("editing") && canEditIlegalContent()) {
+      e.preventDefault();
+      editIlegalPhoto(photo);
+      return;
+    }
+    const orgBtn = e.target.closest("a[data-ilegal-org]");
+    if (orgBtn) {
+      e.preventDefault();
+      showIlegalOrg(orgBtn.dataset.ilegalGroup, orgBtn.dataset.ilegalOrg);
+      return;
+    }
+    const groupBtn = e.target.closest("a[data-ilegal-group]:not([data-ilegal-org])");
+    if (groupBtn) {
+      e.preventDefault();
+      showIlegalGroup(groupBtn.dataset.ilegalGroup);
+    }
+  }
+
+  function onIlegalInput(e) {
+    const input = e.target.closest(".ilegal-value");
+    if (!input || !canEditIlegalContent()) return;
+    const org = findIlegalOrg(input.dataset.ilegalGroup, input.dataset.ilegalOrg);
+    if (!org) return;
+    org.fields = org.fields || {};
+    org.fields[input.dataset.ilegalField] = input.value;
+    if (input.dataset.ilegalField === "nome") {
+      org.name = input.value.trim() || org.name || "Organização";
+      const tab = document.querySelector(`a[data-ilegal-org="${org.id}"]`);
+      if (tab) tab.textContent = org.name;
+      const title = input.closest(".ilegal-org-page") && input.closest(".ilegal-org-page").querySelector("h3");
+      if (title) title.textContent = org.name;
+    }
+    const copy = input.parentElement && input.parentElement.querySelector(".ilegal-copy");
+    if (copy) {
+      copy.dataset.copy = input.value;
+      copy.disabled = !String(input.value || "").trim();
+    }
+    scheduleIlegalSave();
+  }
+
+  async function editIlegalPhoto(slot) {
+    const org = findIlegalOrg(slot.dataset.ilegalGroup, slot.dataset.ilegalOrg);
+    if (!org) return;
+    const index = Number(slot.dataset.ilegalPhoto);
+    const current = (org.photos && org.photos[index]) || "";
+    try {
+      const url = await openImageModal(current);
+      if (url == null) return;
+      org.photos = org.photos || ["", "", "", "", ""];
+      org.photos[index] = url;
+      await persistIlegal();
+      renderIlegalSection();
+      showIlegalGroup(slot.dataset.ilegalGroup);
+      showIlegalOrg(slot.dataset.ilegalGroup, slot.dataset.ilegalOrg);
+    } catch (err) {
+      toast(err.message);
+    }
+  }
+
+  async function addIlegalOrg(group) {
+    const values = await openModal("Nova organização", [{ name: "name", label: "Nome", value: "Nova organização" }]);
+    if (!values) return;
+    const name = (values.name || "").trim() || "Nova organização";
+    const base = slug(name).replace(/^link-/, "") || "org";
+    const ids = new Set((ilegalInfo[group] || []).map((org) => org.id));
+    let id = base.slice(0, 40) || "org";
+    let n = 2;
+    while (ids.has(id)) id = `${base}-${n++}`.slice(0, 40);
+    if (!ilegalInfo[group]) ilegalInfo[group] = [];
+    ilegalInfo[group].push({
+      id,
+      name,
+      photos: ["", "", "", "", ""],
+      fields: { nome: name, lider: "", vice: "", discord: "", connect: "" },
+    });
+    await persistIlegal();
+    renderIlegalSection();
+    showIlegalGroup(group);
+    showIlegalOrg(group, id);
+    toast("Organização adicionada");
+  }
+
+  async function removeIlegalOrg(group, orgId) {
+    ilegalInfo[group] = (ilegalInfo[group] || []).filter((org) => org.id !== orgId);
+    await persistIlegal();
+    renderIlegalSection();
+    showIlegalGroup(group);
+    toast("Organização removida");
+  }
+
+  async function persistIlegal() {
+    const res = await fetch("/api/ilegal", {
+      method: "PUT",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ ilegalInfo }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Não foi possível salvar o INFO ILEGAL");
+    if (data.ilegalInfo) ilegalInfo = data.ilegalInfo;
+    if (document.body.classList.contains("editing")) {
+      setEditable(true);
+      refreshChrome();
+    }
+    return data;
+  }
+
   async function editConnect() {
     const values = await openModal("Connect", [
       { name: "text", label: "Texto que o jogador vai copiar", value: connectText || "connect " },
@@ -814,7 +1181,11 @@
   }
 
   async function persistSite(extra) {
+    if (!canEditSite() && canEditIlegalContent()) {
+      return persistIlegal();
+    }
     syncConnectFromDom();
+    const ilegalView = currentIlegalView();
     const html = document.body.classList.contains("editing") ? cleanHtml() : snapshot;
     const res = await fetch("/api/site", {
       method: "PUT",
@@ -826,6 +1197,7 @@
         vipStoreUrl,
         vipStoreLabel,
         connectText,
+        ilegalInfo,
         ...extra,
       }),
     });
@@ -834,9 +1206,12 @@
     if (data.vipStoreUrl != null) vipStoreUrl = data.vipStoreUrl;
     if (data.vipStoreLabel) vipStoreLabel = data.vipStoreLabel;
     if (data.connectText != null) connectText = data.connectText;
+    if (data.ilegalInfo) ilegalInfo = data.ilegalInfo;
     snapshot = html;
     renderVipButtons();
     renderConnectBox();
+    renderIlegalSection();
+    restoreIlegalView(ilegalView);
     if (typeof calcular === "function") calcular();
     if (document.body.classList.contains("editing")) {
       setEditable(true);
@@ -864,11 +1239,14 @@
 
   async function save() {
     try {
+      clearTimeout(saveTimer);
+      clearTimeout(ilegalSaveTimer);
       await persistSite({});
       toast("Alterações salvas");
       exitEdit();
       renderVipButtons();
       renderConnectBox();
+      renderIlegalSection();
     } catch (err) {
       toast(err.message);
     }
@@ -881,13 +1259,16 @@
       return;
     }
     clearTimeout(saveTimer);
+    clearTimeout(ilegalSaveTimer);
     vipStoreUrl = editBackup.vipStoreUrl;
     vipStoreLabel = editBackup.vipStoreLabel;
     connectText = editBackup.connectText;
+    ilegalInfo = editBackup.ilegalInfo || ilegalInfo;
     siteTitle = editBackup.title;
     document.title = siteTitle;
     parkAdminBar();
     parkCalcFooter();
+    parkIlegal();
     document.getElementById("site-root").innerHTML = editBackup.html;
     snapshot = editBackup.html;
     editBackup = null;
@@ -895,6 +1276,7 @@
     exitEdit();
     renderVipButtons();
     renderConnectBox();
+    renderIlegalSection();
     persistSite({})
       .then(() => toast("Alterações canceladas. Voltou ao que era antes."))
       .catch((err) => toast(err.message));
@@ -905,16 +1287,20 @@
     if (!document.body.classList.contains("editing")) {
       parkAdminBar();
       parkCalcFooter();
+      parkIlegal();
       snapshot = document.getElementById("site-root").innerHTML;
       editBackup = {
         html: snapshot,
         vipStoreUrl,
         vipStoreLabel,
         connectText,
+        ilegalInfo: JSON.parse(JSON.stringify(ilegalInfo)),
         title: siteTitle,
       };
       document.body.classList.add("editing");
     }
+    if (!canEditSite()) location.hash = "#info-ilegal";
+    renderIlegalSection();
     setEditable(true);
     refreshChrome();
     renderConnectBox();
@@ -929,6 +1315,7 @@
     if (selected) selected.classList.remove("is-selected");
     selected = null;
     renderConnectBox();
+    renderIlegalSection();
   }
 
   function editBlockFrom(node) {
@@ -978,6 +1365,13 @@
   }
 
   let saveTimer = null;
+  let ilegalSaveTimer = null;
+  function scheduleIlegalSave() {
+    clearTimeout(ilegalSaveTimer);
+    ilegalSaveTimer = setTimeout(() => {
+      persistIlegal().catch((err) => toast(err.message));
+    }, 1400);
+  }
   function scheduleSave() {
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
@@ -1074,6 +1468,10 @@
     });
 
     window.addEventListener("hashchange", () => {
+      if (document.body.classList.contains("editing") && !canEditSite() && location.hash !== "#info-ilegal") {
+        location.hash = "#info-ilegal";
+        return;
+      }
       if (document.body.classList.contains("editing")) setTimeout(refreshChrome, 50);
     });
   }
@@ -1103,14 +1501,14 @@
       return;
     }
 
-    const role = me.isOwner ? " · dono" : me.canEdit ? " · admin" : "";
+    const role = me.isOwner ? " · dono" : me.role === "ilegal" ? " · ilegal" : me.canEdit ? " · admin" : "";
     const who = escapeHtml(`${me.username}${role}`);
     let extra = `
-      <div class="admin-user" title="${who}">
+      <button class="admin-user" type="button" id="btn-profile" title="${who}">
         <img src="${escapeHtml(me.avatar)}" alt="${who}">
-      </div>
+      </button>
     `;
-    if (me.isOwner) {
+    if (me.isOwner || me.canManageStaff) {
       extra += `<button class="btn btn-ghost" type="button" id="btn-staff">Cadastros${
         me.pendingCount ? `<span class="badge">${me.pendingCount}</span>` : ""
       }</button>`;
@@ -1118,11 +1516,10 @@
       extra += `<button class="btn btn-ghost" type="button" disabled>Pedido em análise</button>`;
     } else if (me.requestStatus === "refused") {
       extra += `<button class="btn btn-ghost" type="button" id="btn-request">Pedir de novo</button>`;
-    } else if (!me.canEdit) {
+    } else if (!canEditSite() && !canEditIlegalContent()) {
       extra += `<button class="btn btn-ghost" type="button" id="btn-request">Pedir admin</button>`;
     }
-    extra += `<button class="btn btn-ghost" type="button" id="btn-account">Conta</button>`;
-    if (me.canEdit) {
+    if (canEditSite() || canEditIlegalContent()) {
       extra += `<button class="btn" type="button" id="btn-edit">${
         document.body.classList.contains("editing") ? "Concluir" : "Editar"
       }</button>`;
@@ -1141,14 +1538,21 @@
     if (requestBtn) requestBtn.onclick = requestAccess;
     const staffBtn = document.getElementById("btn-staff");
     if (staffBtn) staffBtn.onclick = openStaffPanel;
-    const accountBtn = document.getElementById("btn-account");
-    if (accountBtn) accountBtn.onclick = openAccountPanel;
+    const profileBtn = document.getElementById("btn-profile");
+    if (profileBtn) {
+      profileBtn.setAttribute("aria-expanded", String(!document.getElementById("account-panel").hidden));
+      profileBtn.onclick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleAccountPanel();
+      };
+    }
     const editBtn = document.getElementById("btn-edit");
     if (editBtn) {
-      editBtn.onclick = () => {
+      editBtn.onclick = async () => {
         if (document.body.classList.contains("editing")) {
           editBackup = null;
-          exitEdit();
+          await save();
         } else enterEdit();
         renderAdminBar();
       };
@@ -1159,13 +1563,22 @@
       await fetch("/auth/logout", { method: "POST", credentials: "include" });
       location.href = "/";
     };
-    if (!me.canEdit && document.body.classList.contains("editing")) exitEdit();
+    if (!canEditSite() && !canEditIlegalContent() && document.body.classList.contains("editing")) exitEdit();
   }
 
   async function refreshMe() {
     const meRes = await fetch("/api/me", { credentials: "include" });
     me = await meRes.json();
     renderAdminBar();
+    if (canEditIlegalContent()) {
+      const siteRes = await fetch("/api/site", { credentials: "include" });
+      const site = await siteRes.json().catch(() => ({}));
+      if (site.ilegalInfo) ilegalInfo = site.ilegalInfo;
+      renderIlegalSection();
+    } else {
+      parkIlegal();
+      ilegalInfo = { favela: [], qg: [], gueto: [] };
+    }
   }
 
   async function requestAccess() {
@@ -1217,7 +1630,8 @@
     if (me.mustChangePassword) {
       toast("Troque a senha provisória na sua conta.");
       openAccountPanel();
-    } else if (me.isOwner || me.canEdit) toast("Login feito. Clique em Editar para alterar o site.");
+    } else if (me.isOwner || canEditSite()) toast("Login feito. Clique em Editar para alterar o site.");
+    else if (canEditIlegalContent()) toast("Login feito. Você pode editar o INFO ILEGAL.");
     else if (me.requestStatus === "pending") toast("Login feito. Seu pedido de admin está em análise.");
     else toast("Login feito. Clique em Pedir admin para solicitar acesso.");
   }
@@ -1264,7 +1678,7 @@
       <img src="${person.avatar || "https://cdn.discordapp.com/embed/avatars/0.png"}" alt="">
       <div class="meta">
         <strong>${escapeHtml(email || person.username || "Usuário")}</strong>
-        <small>${escapeHtml(person.username || "")}${date ? " · " + date : ""}</small>
+        <small>${escapeHtml(person.username || "")}${person.role ? " · " + (person.role === "ilegal" ? "Ilegal" : "Admin") : ""}${date ? " · " + date : ""}</small>
       </div>
       <div class="actions">${actionsHtml}</div>
     </div>`;
@@ -1291,15 +1705,19 @@
       : `<p class="staff-empty">Nenhum pedido pendente.</p>`;
     admins.innerHTML = adminList.length
       ? adminList
-          .map(
-            (p) =>
-              personRow(
-                p,
-                `<button class="btn btn-danger" type="button" data-act="remove" data-id="${encodeURIComponent(p.id)}">Remover</button>`
-              )
-          )
+          .map((p) => {
+            const isIlegal = p.role === "ilegal";
+            let actions = "";
+            if (me.isOwner || me.canSetAdminRole) {
+              actions += `<button class="btn btn-ghost" type="button" data-act="role" data-id="${encodeURIComponent(p.id)}">Cargo</button>`;
+              actions += `<button class="btn btn-danger" type="button" data-act="remove" data-id="${encodeURIComponent(p.id)}">Remover</button>`;
+            } else if (isIlegal) {
+              actions += `<button class="btn btn-danger" type="button" data-act="remove" data-id="${encodeURIComponent(p.id)}">Remover</button>`;
+            }
+            return personRow(p, actions);
+          })
           .join("")
-      : `<p class="staff-empty">Nenhum admin aprovado ainda.</p>`;
+      : `<p class="staff-empty">Nenhuma conta aprovada ainda.</p>`;
     refused.innerHTML = refusedList.length
       ? refusedList.map((p) => personRow(p, "")).join("")
       : `<p class="staff-empty">Ninguém recusado.</p>`;
@@ -1307,6 +1725,12 @@
 
   async function openStaffPanel() {
     const panel = document.getElementById("staff-panel");
+    const hint = panel.querySelector(".staff-hint");
+    if (hint) {
+      hint.textContent = me.isOwner
+        ? "Aceite o pedido e escolha Admin ou Ilegal. Somente você pode definir o cargo Admin."
+        : "Você pode aceitar pedidos só no cargo Ilegal. Somente o dono pode definir Admin.";
+    }
     const res = await fetch("/api/admin/requests", { credentials: "include" });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return toast(data.error || "Não foi possível abrir os cadastros");
@@ -1317,57 +1741,135 @@
   async function staffAction(act, encodedId) {
     const id = decodeURIComponent(encodedId || "");
     let password = "";
+    let role = me.isOwner ? "admin" : "ilegal";
     if (act === "accept") {
-      const values = await openModal("Aceitar admin", [
+      const fields = [];
+      if (me.isOwner) {
+        fields.push({
+          name: "role",
+          label: "Cargo",
+          type: "select",
+          value: "admin",
+          options: [
+            { value: "admin", label: "Admin — edita o site inteiro" },
+            { value: "ilegal", label: "Ilegal — só edita o INFO ILEGAL" },
+          ],
+        });
+      }
+      fields.push({
+        name: "password",
+        label: me.isOwner
+          ? "Senha provisória (opcional). Vazio mantém a senha que a pessoa cadastrou"
+          : "Senha provisória (opcional). O cargo será Ilegal. Vazio mantém a senha que a pessoa cadastrou",
+        value: "",
+        placeholder: "Ex.: zer01temp",
+      });
+      const values = await openModal(me.isOwner ? "Aceitar cadastro" : "Aceitar como Ilegal", fields);
+      if (!values) return;
+      password = (values.password || "").trim();
+      role = me.isOwner && values.role === "admin" ? "admin" : "ilegal";
+    } else if (act === "role") {
+      if (!me.isOwner) return toast("Somente o dono pode definir o cargo Admin.");
+      const values = await openModal("Alterar cargo", [
         {
-          name: "password",
-          label: "Senha provisória (opcional). Vazio mantém a senha que a pessoa cadastrou",
-          value: "",
-          placeholder: "Ex.: zer01temp",
+          name: "role",
+          label: "Cargo",
+          type: "select",
+          value: "admin",
+          options: [
+            { value: "admin", label: "Admin — edita o site inteiro" },
+            { value: "ilegal", label: "Ilegal — só edita o INFO ILEGAL" },
+          ],
         },
       ]);
       if (!values) return;
-      password = (values.password || "").trim();
+      role = values.role === "ilegal" ? "ilegal" : "admin";
     }
     const res = await fetch("/api/admin/decide", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: act === "remove" ? "remove" : act, id, password }),
+      body: JSON.stringify({ action: act === "remove" ? "remove" : act, id, password, role }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return toast(data.error || "Não foi possível atualizar");
     fillStaffLists(data);
     if (data.provisionalPassword) {
       await openModal("Senha provisória", [
-        { name: "password", label: "Envie esta senha para a pessoa. Ela poderá trocar depois em Conta", value: data.provisionalPassword },
+        { name: "password", label: "Envie esta senha para a pessoa. Ela poderá trocar depois no perfil", value: data.provisionalPassword },
       ]);
+    } else if (act === "role") {
+      toast(role === "ilegal" ? "Cargo definido como Ilegal" : "Cargo definido como Admin");
     } else {
-      toast(act === "accept" ? "Admin aceito" : act === "refuse" ? "Pedido recusado" : "Admin removido");
+      toast(act === "accept" ? (role === "ilegal" ? "Ilegal aceito" : "Admin aceito") : act === "refuse" ? "Pedido recusado" : "Acesso removido");
     }
     await refreshMe();
   }
 
-  function openAccountPanel() {
+  function positionAccountPanel() {
     const panel = document.getElementById("account-panel");
+    const btn = document.getElementById("btn-profile");
+    if (!panel || !btn || panel.hidden) return;
+    const rect = btn.getBoundingClientRect();
+    panel.style.top = `${Math.round(rect.bottom + 8)}px`;
+    panel.style.right = `${Math.max(12, Math.round(window.innerWidth - rect.right))}px`;
+    panel.style.left = "auto";
+  }
+
+  function fillAccountForm() {
+    const hasPassword = Boolean(me.hasPassword);
     const error = document.getElementById("account-error");
     const hint = document.getElementById("account-hint");
+    const currentWrap = document.getElementById("account-current-wrap");
+    const currentInput = document.getElementById("account-current");
+    const passwordInput = document.getElementById("account-password");
     error.hidden = true;
     error.textContent = "";
     document.getElementById("account-email").value = me.email || me.id || "";
-    document.getElementById("account-current").value = "";
-    document.getElementById("account-password").value = "";
+    currentInput.value = "";
+    passwordInput.value = "";
     document.getElementById("account-password-confirm").value = "";
-    hint.textContent = me.mustChangePassword
-      ? "Você está com senha provisória. Troque a senha para continuar com segurança."
-      : "Altere seu e-mail ou sua senha. A senha atual é obrigatória para confirmar.";
     document.getElementById("account-email").readOnly = Boolean(me.isOwner);
+    currentWrap.hidden = !hasPassword;
+    currentInput.required = false;
+    passwordInput.required = !hasPassword;
+    passwordInput.placeholder = hasPassword ? "Deixe em branco para não trocar" : "Mínimo 6 caracteres";
+    document.getElementById("account-password-label").textContent = hasPassword ? "Nova senha" : "Criar senha";
+    document.getElementById("account-password-confirm-label").textContent = hasPassword
+      ? "Confirmar nova senha"
+      : "Confirmar senha";
+    if (me.mustChangePassword) {
+      hint.textContent = "Você está com senha provisória. Troque a senha para continuar com segurança.";
+    } else if (!hasPassword) {
+      hint.textContent = "Crie uma senha para a conta. Depois você também pode alterar o e-mail por aqui.";
+    } else {
+      hint.textContent = "Altere o e-mail ou a senha. A senha atual confirma a mudança.";
+    }
+  }
+
+  function openAccountPanel() {
+    const panel = document.getElementById("account-panel");
+    fillAccountForm();
     panel.hidden = false;
-    setTimeout(() => document.getElementById("account-current").focus(), 0);
+    positionAccountPanel();
+    const profileBtn = document.getElementById("btn-profile");
+    if (profileBtn) profileBtn.setAttribute("aria-expanded", "true");
+    const focusEl = me.hasPassword
+      ? document.getElementById("account-current")
+      : document.getElementById("account-password");
+    setTimeout(() => focusEl && focusEl.focus(), 0);
   }
 
   function closeAccountPanel() {
     document.getElementById("account-panel").hidden = true;
+    const profileBtn = document.getElementById("btn-profile");
+    if (profileBtn) profileBtn.setAttribute("aria-expanded", "false");
+  }
+
+  function toggleAccountPanel() {
+    const panel = document.getElementById("account-panel");
+    if (panel.hidden) openAccountPanel();
+    else closeAccountPanel();
   }
 
   async function submitAccount(event) {
@@ -1378,30 +1880,30 @@
     const newPassword = document.getElementById("account-password").value;
     const confirm = document.getElementById("account-password-confirm").value;
     const currentEmail = String(me.email || me.id || "").toLowerCase();
+    const hasPassword = Boolean(me.hasPassword);
     error.hidden = true;
+    if (!hasPassword && !newPassword) {
+      error.textContent = "Crie uma senha para a conta.";
+      error.hidden = false;
+      return;
+    }
     if (newPassword && newPassword !== confirm) {
       error.textContent = "A confirmação da nova senha não confere.";
       error.hidden = false;
       return;
     }
     const emailChanged = Boolean(email && email.toLowerCase() !== currentEmail && !me.isOwner);
-    if (!newPassword && !emailChanged) {
+    if (hasPassword && !newPassword && !emailChanged) {
       error.textContent = "Informe a nova senha ou um e-mail diferente.";
       error.hidden = false;
       return;
     }
+    if (hasPassword && (newPassword || emailChanged) && !currentPassword) {
+      error.textContent = "Digite a senha atual para confirmar.";
+      error.hidden = false;
+      return;
+    }
     try {
-      if (emailChanged) {
-        const res = await fetch("/api/account/email", {
-          method: "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ currentPassword, newEmail: email }),
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || "Não foi possível trocar o e-mail.");
-        me = data.user || me;
-      }
       if (newPassword) {
         const res = await fetch("/api/account/password", {
           method: "POST",
@@ -1410,7 +1912,21 @@
           body: JSON.stringify({ currentPassword, newPassword }),
         });
         const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || "Não foi possível trocar a senha.");
+        if (!res.ok) throw new Error(data.error || "Não foi possível salvar a senha.");
+        me = data.user || me;
+      }
+      if (emailChanged) {
+        const res = await fetch("/api/account/email", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            currentPassword: newPassword || currentPassword,
+            newEmail: email,
+          }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Não foi possível trocar o e-mail.");
         me = data.user || me;
       }
       closeAccountPanel();
@@ -1439,10 +1955,14 @@
     document.getElementById("login-form").addEventListener("submit", submitEmailLogin);
     document.getElementById("login-request").onclick = submitAccessRequest;
     document.getElementById("account-close").onclick = closeAccountPanel;
-    document.getElementById("account-panel").addEventListener("click", (e) => {
-      if (e.target.id === "account-panel") closeAccountPanel();
-    });
     document.getElementById("account-form").addEventListener("submit", submitAccount);
+    document.addEventListener("click", (e) => {
+      const panel = document.getElementById("account-panel");
+      if (!panel || panel.hidden) return;
+      if (e.target.closest("#account-panel, #btn-profile")) return;
+      closeAccountPanel();
+    });
+    window.addEventListener("resize", positionAccountPanel);
 
     const [meRes, siteRes] = await Promise.all([
       fetch("/api/me", { credentials: "include" }),
@@ -1454,17 +1974,20 @@
     vipStoreUrl = site.vipStoreUrl || "";
     vipStoreLabel = site.vipStoreLabel || "LOJA VIP";
     connectText = site.connectText || "";
+    ilegalInfo = site.ilegalInfo || { favela: [], qg: [], gueto: [] };
     document.title = siteTitle;
     document.getElementById("site-root").innerHTML = site.html || "";
     snapshot = site.html || "";
     if (window.bootSiteRouting) window.bootSiteRouting();
     renderVipButtons();
     renderConnectBox();
+    renderIlegalSection();
     if (me.mustChangePassword) openAccountPanel();
 
     const params = new URLSearchParams(location.search);
     if (params.get("login") === "ok") {
-      if (me.isOwner || me.canEdit) toast("Login feito. Clique em Editar para alterar o site.");
+      if (me.isOwner || canEditSite()) toast("Login feito. Clique em Editar para alterar o site.");
+      else if (canEditIlegalContent()) toast("Login feito. Você pode editar o INFO ILEGAL.");
       else if (me.requestStatus === "pending") toast("Login feito. Seu pedido de admin está em análise.");
       else toast("Login feito. Clique em Pedir admin para solicitar acesso.");
       history.replaceState({}, "", "/");

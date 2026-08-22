@@ -249,7 +249,21 @@ function loginWithPassword(email, password) {
   return { ok: true, user: sessionUserFromAccount(user), account: publicAccount(user) };
 }
 
-function decideRequest(userId, action, provisionalPassword) {
+function actorIsOwner(actorId) {
+  return normalizeStaffId(actorId) === ownerIdentity();
+}
+
+function wantedRoleForActor(role, actorId) {
+  if (actorIsOwner(actorId)) {
+    return { ok: true, role: role === "ilegal" ? "ilegal" : "admin" };
+  }
+  if (String(role || "ilegal") === "admin") {
+    return { ok: false, error: "Somente o dono pode definir o cargo Admin." };
+  }
+  return { ok: true, role: "ilegal" };
+}
+
+function decideRequest(userId, action, provisionalPassword, role, actorId) {
   const staff = loadStaff();
   const id = normalizeStaffId(userId);
   const request = staff.requests.find((req) => normalizeStaffId(req.id) === id);
@@ -259,6 +273,8 @@ function decideRequest(userId, action, provisionalPassword) {
 
   let generatedPassword = "";
   if (action === "accept") {
+    const resolved = wantedRoleForActor(role, actorId);
+    if (!resolved.ok) return resolved;
     request.status = "accepted";
     request.decidedAt = new Date().toISOString();
     staff.admins = staff.admins.filter((admin) => normalizeStaffId(admin.id) !== id);
@@ -267,6 +283,7 @@ function decideRequest(userId, action, provisionalPassword) {
       email: request.email || request.id,
       username: request.username,
       avatar: request.avatar,
+      role: resolved.role,
       approvedAt: request.decidedAt,
     });
     const wanted = String(provisionalPassword || "").trim();
@@ -291,26 +308,62 @@ function decideRequest(userId, action, provisionalPassword) {
   return { ok: true, staff, provisionalPassword: generatedPassword || undefined };
 }
 
-function removeAdmin(userId) {
+function removeAdmin(userId, actorId) {
   const staff = loadStaff();
   const id = normalizeStaffId(userId);
-  const before = staff.admins.length;
-  staff.admins = staff.admins.filter((admin) => normalizeStaffId(admin.id) !== id);
-  if (staff.admins.length === before) {
-    return { ok: false, error: "Admin não encontrado." };
+  if (id === ownerIdentity()) {
+    return { ok: false, error: "O dono não pode ser removido." };
   }
+  const target = staff.admins.find((admin) => normalizeStaffId(admin.id) === id);
+  if (!target) {
+    return { ok: false, error: "Conta não encontrada." };
+  }
+  if (!actorIsOwner(actorId) && target.role !== "ilegal") {
+    return { ok: false, error: "Admins só podem remover contas Ilegal." };
+  }
+  staff.admins = staff.admins.filter((admin) => normalizeStaffId(admin.id) !== id);
   const request = staff.requests.find((req) => normalizeStaffId(req.id) === id);
   if (request) request.status = "removed";
   saveStaff(staff);
   return { ok: true, staff };
 }
 
+function setStaffRole(userId, role, actorId) {
+  const staff = loadStaff();
+  const id = normalizeStaffId(userId);
+  if (id === ownerIdentity()) {
+    return { ok: false, error: "O cargo do dono não pode ser alterado." };
+  }
+  const target = staff.admins.find((admin) => normalizeStaffId(admin.id) === id);
+  if (!target) {
+    return { ok: false, error: "Conta não encontrada." };
+  }
+  if (!actorIsOwner(actorId)) {
+    return { ok: false, error: "Somente o dono pode alterar o cargo para Admin." };
+  }
+  const resolved = wantedRoleForActor(role, actorId);
+  if (!resolved.ok) return resolved;
+  target.role = resolved.role;
+  saveStaff(staff);
+  return { ok: true, staff };
+}
+
+function getAdminRole(userId) {
+  if (!userId) return null;
+  const id = normalizeStaffId(userId);
+  const admin = loadStaff().admins.find((item) => normalizeStaffId(item.id) === id);
+  if (!admin) return null;
+  return admin.role === "ilegal" ? "ilegal" : "admin";
+}
+
 function changePassword(userId, currentPassword, newPassword) {
   const staff = loadStaff();
   const user = findUser(staff, userId);
   if (!user) return { ok: false, error: "Conta não encontrada." };
-  if (!verifyPassword(currentPassword, user.passwordHash)) {
-    return { ok: false, error: "Senha atual incorreta." };
+  if (user.passwordHash) {
+    if (!verifyPassword(currentPassword, user.passwordHash)) {
+      return { ok: false, error: "Senha atual incorreta." };
+    }
   }
   const check = ensurePassword(newPassword);
   if (!check.ok) return check;
@@ -366,6 +419,7 @@ function listForOwner() {
     ...person,
     id: normalizeStaffId(person.id),
     email: normalizeStaffId(person.email || person.id),
+    role: person.role === "ilegal" ? "ilegal" : person.role === "admin" ? "admin" : "admin",
   });
   return {
     pending: staff.requests.filter((req) => req.status === "pending").map(withEmail),
@@ -385,11 +439,13 @@ module.exports = {
   isApprovedAdmin,
   getRequest,
   getAccount,
+  getAdminRole,
   requestAdmin,
   registerAndRequest,
   loginWithPassword,
   decideRequest,
   removeAdmin,
+  setStaffRole,
   changePassword,
   changeEmail,
   listForOwner,
