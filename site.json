@@ -1,0 +1,2206 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zero01 Roleplay | Portal Oficial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --bg: #050505;
+            --surface: #121212;
+            --glass: rgba(255, 255, 255, 0.03);
+            --text-main: #ffffff;
+            --text-dim: #a0a0a0;
+            --green: #22c55e;
+            --red: #ef4444;
+            --yellow: #fffb00;
+            --blue: #1900ff;
+            --purple: #7700ff;
+            --discord: #5865F2;
+            --transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* --- NAVEGAÇÃO --- */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            background: rgba(5, 5, 5, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+        }
+
+        .nav-container {
+            display: flex;
+            gap: 10px;
+            background: var(--glass);
+            padding: 5px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        nav a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        nav a:hover { color: white; }
+        nav a.active { background: white; color: black; }
+
+        .container {
+            max-width: 1000px;
+            margin: 120px auto 50px;
+            padding: 0 20px;
+        }
+
+        /* --- SISTEMA DE ABAS --- */
+        .tab-content, .subtab-content, .subsubtab-content { display: none; }
+        .tab-content.active, .subtab-content.active, .subsubtab-content.active { display: block; animation: fadeIn 0.5s; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* --- LOGO --- */
+        .logo-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo-img {
+            max-width: 200px;
+            height: auto;
+        }
+
+        h1 { font-size: 2.5rem; font-weight: 800; letter-spacing: -1px; text-align: center; margin-bottom: 10px; }
+        h2 { font-size: 1.2rem; margin-bottom: 30px; text-align: center; color: var(--text-dim); }
+
+        .card {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .action-img {
+            max-width: 100%;
+            border-radius: 15px;
+            margin-top: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* --- SUB MENU --- */
+        .submenu {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .submenu a {
+            background: var(--surface);
+            color: var(--text-dim);
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .submenu a:hover { background: #1a1a1a; color: white; }
+        .submenu a.active { background: var(--primary); color: white; }
+
+        /* --- TABELAS --- */
+        table { width: 100%; border-collapse: separate; border-spacing: 0 8px; margin-top: 15px; }
+        th { padding: 15px 20px; color: var(--text-dim); font-size: 0.75rem; text-transform: uppercase; text-align: left; }
+        td { padding: 15px 20px; background: var(--surface); border-top: 1px solid rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.03); }
+        td:first-child { border-left: 1px solid rgba(255, 255, 255, 0.03); border-radius: 12px 0 0 12px; }
+        td:last-child { border-right: 1px solid rgba(255, 255, 255, 0.03); border-radius: 0 12px 12px 0; }
+
+        /* --- INPUTS --- */
+        input[type="number"] { background: #1a1a1a; border: 1px solid #333; color: white; padding: 5px; border-radius: 6px; width: 50px; }
+        input[type="checkbox"] { accent-color: var(--primary); width: 16px; height: 16px; }
+
+        /* --- CALCULADORA --- */
+        .calculator-footer {
+            position: fixed; bottom: 20px; right: 20px;
+            background: #1a1a1a; color: white;
+            padding: 20px; border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            font-weight: 700; z-index: 100;
+            border: 1px solid rgba(255,255,255,0.1);
+            min-width: 250px;
+        }
+        .calc-row { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .calc-label { color: var(--text-dim); font-size: 0.8rem; }
+        .calc-total { color: var(--green); margin-top: 5px; padding-top: 5px; border-top: 1px solid #333; }
+
+        .btn {
+            background: var(--primary); color: white; padding: 15px 30px;
+            border-radius: 50px; text-decoration: none; font-weight: 700; display: inline-block;
+            transition: var(--transition);
+        }
+        .btn:hover { filter: brightness(1.2); }
+        .btn-discord { background: var(--discord); }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-container">
+        <a href="#inicio" id="link-inicio">Início</a>
+        <a href="#regras" id="link-regras">Regras</a>
+        <a href="#acao" id="link-acao">Ação</a>
+        <a href="#dominacao" id="link-dominacao">Dominação</a>
+        <a href="#precos" id="link-precos">Preços</a>
+        <a href="#punicoes" id="link-punicoes">Punições</a>
+    </div>
+</nav>
+
+<div class="container">
+    
+    <div class="logo-container">
+        <img src="https://i.postimg.cc/v8rt71Tn/broche-zer01.png" alt="Logo Zer01" class="logo-img">
+    </div>
+
+    <div id="inicio" class="tab-content">
+        <h1>ZER01 ROLEPLAY</h1>
+        <h2>Sua história começa aqui.</h2>
+        <div class="card" style="text-align: center;">
+            <p style="margin-bottom: 20px;">Bem-vindo ao portal oficial. Clique abaixo para entrar no nosso servidor:</p>
+            <a href="https://discord.gg/zer01rp" target="_blank" class="btn btn-discord">Entrar no Discord</a>
+        </div>
+    </div>
+
+    <div id="regras" class="tab-content">
+        <h1>LIVRO DE REGRAS</h1>
+                        <div class="submenu">
+            <a onclick="openSubTab('avisos-e-notas')" id="sublink-avisos-e-notas">Avisos e Notas</a>                           
+            <a onclick="openSubTab('regras-termos-e-condicoes')" id="sublink-termos-e-condicoes">Termos e Condições</a>
+            <a onclick="openSubTab('regras-gerais')" id="sublink-regras-gerais">Regras Gerais</a>
+            <a onclick="openSubTab('regras-hospital-e-bombeiros')" id="sublink-regras-hospital-e-bombeiros">Regras de Conduta - Hospital e Bombeiros</a>
+            <a onclick="openSubTab('regras-gravidez-e-kids')" id="sublink-regras-gravidez-e-kids">Regras de Gravidez e Kids</a>
+            <a onclick="openSubTab('regras-safezones')" id="sublink-regras-safezones">Regras Safezone</a>
+            <a onclick="openSubTab('regras-personagem')" id="sublink-regras-personagem">Regras do Personagem</a>
+            <a onclick="openSubTab('regras-de-denuncia')" id="sublink-regras-de-denuncia">Regras de Denúncia</a>   
+            <a onclick="openSubTab('regras-policia')" id="sublink-regras-policia">Regras Policial</a>                       
+        </div>
+        <div id="avisos-e-notas" class="subtab-content">
+            <div class="card">
+            <h3 style="color: var(--red);">📢 Aviso</h3>
+            <p>Independente de qualquer regra colocada nesse livro de regras, a equipe operacional do ZER01 ROLEPLAY se reserva ao direito de orientar e/ou retirar qualquer jogador da comunidade, caso não se enquadre nos padrões da comunidade.</p>
+            </div>
+        <div class="card">
+            <h3 style="color: var(--yellow);">📝 Nota</h3>
+            <p>A equipe ZER01 ROLEPLAY repudia e proíbe qualquer tipo de assédio, homofobia, preconceito, capacitismo, abuso, racismo, discurso de ódio (seja contra raça, orientação sexual, classe social entre outros) dentro e fora do servidor, no Discord ou em qualquer rede social do servidor. Bom senso é a chave de ouro para uma comunidade saudável. Qualquer um desses atos são passíveis de banimento permanente.</p>
+            </div>
+        </div>
+
+        <div id="regras-termos-e-condicoes" class="subtab-content">
+            <div class="card">
+                <p> Assim como em outros jogos público-privados, o ZER01 ROLEPLAY possui Termos e Condições aceitos automaticamente ao ingressar no servidor. Ao conectar-se, o jogador assume a responsabilidade de estar ciente das regras e deste documento, que estabelece os parâmetros para a convivência e funcionamento da comunidade.</p>
+            </div>
+            <div class="card">
+                <h3>1.0 - Acesso ao Jogo</h3>
+                <p>1.1 - O ZER01 ROLEPLAY é um jogo virtual hospedado por empresa terceirizada contratada pelos responsáveis.</p>
+                <p>1.2 - A conexão ocorre via a plataforma FiveM. Ao ingressar, o jogador aceita automaticamente os termos do FiveM. Não nos responsabilizamos por erros ou divergências diretamente relacionados à plataforma.</p>
+            </div>
+            <div class="card">
+                <h3>2.0 - Uso do Servidor</h3>
+                <p>2.1 - Ao conectar-se, você se compromete a seguir todas as regras gerais e específicas do roleplay descritas neste documento.</p>
+                <p>2.2 - Conhecer as regras não exime o jogador de manter respeito e bom senso nas interações.</p>
+                <p>2.3 - É responsabilidade do jogador acompanhar atualizações periódicas das regras e termos.</p>
+                <p>2.4 - O uso de ferramentas de monitoramento para garantir a segurança e integridade do servidor é aceito automaticamente ao jogar.</p>
+                <p>2.5 - Qualquer dúvida deve ser esclarecida com a equipe antes de ações que possam infringir as regras.</p>
+                <p>2.6 - Violações graves durante eventos ou situações críticas serão analisadas com maior rigor pela administração.</p>
+            </div>
+            <div class="card">
+                <h3>3.0 - Allowlist</h3>
+                <p>3.1 - É proibido sair ou perder acesso ao Discord oficial do ZER01. Isso resulta na perda da CENTRALlist, exigindo novo processo para recuperação.</p>
+            </div>
+            <div class="card">
+                <h3>4.0 - Reembolsos e Doações</h3>
+                <p>4.1 - Doações são destinadas a melhorias no servidor (como scripts e infraestrutura).</p>
+                <p>4.2 - Como gratificação, benefícios exclusivos podem ser concedidos aos doadores.</p>
+                <p>4.3 - Doações não são reembolsáveis sob nenhuma circunstância.</p>
+                <p>4.4 - Doadores estão sujeitos às mesmas regras e punições que qualquer jogador.</p>
+                <p>4.5 - Itens VIP possuem prazos claros (mensal ou permanente). “Permanente” significa válido durante toda a season, encerrando-se com o próximo wipe.</p>
+            </div>
+            <div class="card">
+                <h3>5.0 - Itens do Jogo</h3>
+                <p>5.1 - Todos os itens (físicos ou virtuais) pertencem exclusivamente ao ambiente do servidor.</p>
+                <p>5.2 - É proibido vender ou comprar itens do jogo com dinheiro real ou meios externos. Penalidade: banimento permanente.</p>
+                <p>5.3 - Itens obtidos no jogo não podem ser negociados fora das diretrizes oficiais.</p>
+                <p>5.4 - A transferência de itens entre jogadores deve respeitar o contexto de roleplay e as regras do servidor. Qualquer troca que caracterize abuso ou favorecimento injusto poderá ser anulada pela administração, com a aplicação de penalidades aos envolvidos.</p>
+                <p>5.5 - A duplicação, manipulação ou qualquer tipo de alteração ilícita nos itens do jogo será considerada grave infração e resultará em punição imediata, podendo incluir banimento permanente.</p>
+                <p>5.6 - A equipe administrativa reserva-se o direito de inspecionar inventários, transações ou registros de atividades dos jogadores para assegurar o cumprimento das regras relacionadas aos itens do jogo.</p>
+                <p>5.7 - Eventos ou promoções envolvendo itens do jogo serão regulamentados pela equipe administrativa, e qualquer tentativa de exploração indevida ou quebra das regras durante tais ocasiões será severamente penalizada.</p>
+                <p>5.8 - É proibido o uso de bots, macros ou qualquer outro tipo de automação para a obtenção de itens ou vantagens no jogo. Qualquer jogador identificado utilizando esses recursos será punido conforme as diretrizes do servidor.</p>
+            </div>
+            <div class="card">
+                <h3>6.0 - WIPE</h3>
+                <p>6.1 - O servidor funciona em ciclos de temporada. Após um período, ocorre wipe geral, zerando itens e bens para equilibrar a economia e renovar a experiência. </p>
+            </div>
+            <div class="card">
+                <h3>7.0 - Atualizações dos Termos e Condições</h3>
+                <p>7.1 - A equipe administrativa pode atualizar os termos e condições a qualquer momento, com ou sem aviso prévio. É responsabilidade do jogador manter-se informado sobre mudanças antes de conectar-se ao servidor.</p>
+            </div>
+        </div>
+        
+        <div id="regras-gerais" class="subtab-content">
+            <div class="card">
+                <h3>8.0 - Regras Gerais</h3>
+                <p>8.1 - Bom senso é primordial em todos os aspectos, independentemente de qualquer tipo de regra.</p>
+                <p>8.2 - Proibido falar "OFF RP" na cidade, em qualquer hipótese.</p>
+                <p>8.3 - Ao crashar em uma ação, o player está automaticamente FORA da mesma, não podendo voltar enquanto a ação não for finalizada.</p>
+                <p>8.4 - É permitido aplicar golpes desde que não seja descoberto. Caso o personagem seja pego, poderá ser punido pelos policais.</p>
+                <p>8.5 - Este é um servidor de interpretação de personagens e criação de histórias, então sempre interprete seu personagem acima de qualquer situação nunca saia do roleplay;</p>
+                <p>8.6 - Caso você esteja realizando um roleplay criminal, em hipótese alguma você deverá dar sugestões ou questionar procedimentos policiais dentro do roleplay, caso ache que passou por algum desconforto ou quebra de regra, o canal adequado de report é o sistema de tickets, lembre-se, você é um criminoso, caso queira saber procedimentos policiais, faça o recrutamento da polícia;</p>
+                <p>8.7 - O uso do comando /cam é vedado para criação de conteúdos, sendo assim, fica expressamente proibido o uso do mesmo para benefício próprio ou em ações.</p>
+            </div>
+            <div class="card">
+                <h3>10.0 - Regras Roleplay</h3>
+                <p>10.1 - As regras de roleplay são diretrizes baseadas no bom senso, criadas para garantir uma experiência imersiva, coerente e justa dentro da cidade. Elas existem para orientar os jogadores e prevenir comportamentos classificados como anti-roleplay, preservando a qualidade e o equilíbrio da narrativa coletiva.</p>
+                <p>10.2 - Roleplay significa interpretação de papéis: é o ato de viver e interpretar um personagem diferente de si mesmo, seguindo regras e limites comuns, além das diretrizes do servidor. No contexto de GTA RP, você cria e desenvolve um personagem com personalidade, história e motivações próprias, participando do universo do servidor de forma responsável, respeitosa e coerente.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">11.0 - ANTI-RP</h3>
+                <p>Anti roleplay refere-se a comportamentos que desrespeitam ou interrompem a prática de roleplay, como agir de forma não condizente com o personagem ou o contexto do jogo, desconsiderar a narrativa ou quebrar a imersão da experiência de maneira intencional. Em nosso ambiente, esperamos que todos os participantes mantenham o respeito à dinâmica de roleplay e sigam as regras estabelecidas para garantir uma experiência agradável para todos.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">12.0 - AMOR À VIDA</h3>
+                <p>12.1 - O conceito de "Amor à Vida" refere-se à preocupação com a preservação da vida do seu personagem. Assim como na vida real tememos a morte, o seu personagem também deve demonstrar esse instinto, evitando ações ou comportamentos imprudentes que o coloquem em risco desnecessário ou em situações de perigo extremo sem justificativa plausível.</p>
+                <p>12.2 - Ações Imprudentes É proibido realizar ações que coloquem o personagem em risco extremo sem uma justificativa plausível dentro do roleplay, como confrontar criminosos desarmado ou desafiar autoridades sem planejamento.</p>
+                <p>12.3 - Situações de Risco Em situações de risco iminente, o personagem deve reagir de forma realista, priorizando a autopreservação, como fugir, se esconder ou negociar ao invés de reagir de forma impulsiva.</p>
+                <p>12.4 - Respeito à Dor e Lesões Após sofrer ferimentos ou situações traumáticas, o personagem deve demonstrar consequências físicas ou psicológicas condizentes, evitando ignorar os efeitos de um ataque, acidente ou ameaça à vida.</p>
+                <p>12.5 - Negligência à Vida de Outros Amor à vida não se aplica apenas ao próprio personagem, mas também ao cuidado com a vida de outros cidadãos. Atitudes como ignorar pedidos de ajuda ou expor terceiros a riscos desnecessários podem ser consideradas infrações.</p>
+                <p>12.6 - Exposição Desnecessária ao Perigo É proibido se expor deliberadamente a situações de extremo perigo, como invadir áreas restritas, desafiar gangues sozinho ou ignorar ameaças diretas, sem motivo ou contexto válido dentro do roleplay.</p>
+                <p>12.7 - Tentativas de Suicídio em Roleplay Cenários envolvendo a tentativa de suicídio de um personagem devem ser tratados com extrema sensibilidade e apenas com justificativa narrativa válida. A banalização desse tema pode resultar em punições severas.</p>
+                <p>12.8 - Abuso de Mecanismos de Reviver Evitar o uso de mecânicas de ressuscitação ou atendimento médico apenas como forma de "reiniciar" após um evento que claramente comprometeria a vida do personagem.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">13.0 - RDM (RANDOM DEATH MATCH)</h3>
+                <p>13.1 - O conceito de Random Deathmatch (RDM) refere-se ao ato de atacar, ferir ou matar outro jogador sem um motivo válido dentro do roleplay. Todas as interações que envolvem violência devem ter uma construção narrativa coerente e justificativa plausível dentro do jogo. Atacar sem contexto compromete a imersão e a experiência dos demais jogadores.</p>
+                <p>13.2 - É proibido iniciar combates sem um motivo válido dentro da história do personagem. Qualquer confronto deve ser motivado por situações coerentes com o roleplay, evitando agressões gratuitas ou sem desenvolvimento prévio.</p>
+                <p>13.3 - Atacar ou matar um jogador sem contexto prévio é uma infração grave. O personagem deve ter razões concretas para cometer um homicídio, levando em conta as consequências que essa ação pode gerar.</p>
+                <p>13.4 - A utilização de armas deve seguir a lógica do roleplay. Sacar uma arma e abrir fogo sem aviso, sem negociação ou sem um motivo legítimo é considerado RDM.</p>
+                <p>13.5 - Engajar-se em brigas físicas ou tiroteios sem diálogo prévio ou sem construção narrativa pode ser considerado RDM. Antes de qualquer confronto, deve haver provocação, intimidação ou outra forma de escalonamento da situação.</p>
+                <p>13.6 - Atirar em veículos, NPCs ou jogadores sem qualquer motivo dentro do roleplay prejudica a imersão e pode ser interpretado como RDM. O uso de armas deve estar alinhado ao contexto do personagem.</p>
+                <p>13.7 - É expressamente proibido iniciar combates em zonas neutras, como hospitais, delegacias e áreas de spawn, a menos que haja uma justificativa narrativa forte e envolvimento de outros jogadores na cena.</p>
+                <p>13.8 - Jogadores que praticam RDM estão sujeitos a advertências, banimentos temporários ou permanentes, dependendo da gravidade da infração. O objetivo do roleplay é criar interações imersivas, e o uso indiscriminado da violência compromete essa experiência.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">14.0 - VDM (VEHICLES DEATH MATCH)</h3>
+                <p>14.1 - Vehicle Deathmatch (VDM) é o ato de usar veículos para atropelar, ferir ou matar outros jogadores sem justificativa válida dentro do roleplay. Essa prática compromete a imersão e é passível de punição.</p>
+                <p>14.2 - É proibido usar veículos para atacar outros jogadores de forma intencional, sem um motivo narrativo sólido e coerente com a situação do RP. Isso inclui o uso do carro como arma principal em confrontos sem qualquer desenvolvimento prévio.</p>
+                <p>14.3 - Atropelar um jogador repetidamente para garantir sua morte (car grinding) é estritamente proibido. Após um impacto significativo, o jogador deve respeitar a coerência da cena e não continuar atacando com o veículo.</p>
+                <p>14.4 - Utilizar veículos para causar dano deliberadamente como colidir com outros jogadores, realizar "ratão", aplicar "pit", forçar capotamentos ou colisões ("bate-bate") configura VDM.</p>
+                <p>14.5 - Conduzir de forma irresponsável em locais com grande circulação de players, com o único intuito de causar confusão, também é considerado VDM. Isso inclui avançar contra pedestres sem contexto ou motivo RP.</p>
+                <p>14.6 - Fugir de policiais atropelando agentes ou forçar passagens em bloqueios de forma agressiva e sem justificativa válida pode ser enquadrado como VDM.</p>
+                <p>14.7 - É proibido usar veículos para ferir ou matar jogadores dentro de zonas seguras, como hospitais, delegacias e áreas de spawn. O respeito ao ambiente RP deve ser mantido nesses locais.</p>
+                <p>14.8 - Jogadores que forem flagrados praticando VDM poderão ser punidos com: Advertências, Suspensões temporárias, Banimento por tempo indeterminado (dependendo da gravidade)</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">15.0 - COMBAT LOGGIN (CL)</h3>
+                <p>15.1 - Combat Logging (CL) é o ato de sair do servidor (deslogar) de forma intencional e indevida durante uma situação de RP ou PvP com o objetivo de evitar as consequências do roleplay.</p>
+                <p>15.2 - Será considerado CL quando o jogador: Desconectar-se durante uma ação em andamento, reiniciar o jogo ou trocar de personagem para evitar o RP, deslogar logo após ser abatido fugindo das consequências da cena.</p>
+                <p>15.3 - Em caso de desconexão involuntária: O jogador deve retornar imediatamente ao servidor. Deve se retirar da cena sem interferir no RP. É obrigatório gravar um vídeo do momento da queda como prova.</p>
+                <p>15.4 - Qualquer infração relacionada ao Combat Logging será tratada como grave, e poderá resultar em: Banimento por tempo indeterminado. Todos os casos serão avaliados individualmente pela administração do servidor.</p>
+                <p>15.5 - A regra se aplica a qualquer tipo de conflito: tiroteios, perseguições, confrontos físicos ou abordagens A administração analisará o contexto e a intenção do jogador ao deslogar Em caso de dúvida, procure a staff antes de agir. O RP é baseado em imersão e realismo. Fugir das situações através de CL compromete a experiência de todos no servidor e será tratado com a devida seriedade.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">16.0 - POWERGAMING</h3>
+                <p>16.1 - Refere-se ao uso de mecânicas do jogo de maneira não realista, explorando-as para obter vantagens que não seriam possíveis na vida real. O Powergaming prejudica a imersão e a experiência dos outros jogadores, pois cria situações irreais e quebram a lógica do Roleplay.</p>
+                <p>16.2 - Em casos de tombamentos, capotamentos, manobras, saltos ou colisões no ar em que 03 ou mais pneus do veículo furem, é obrigatória a parada imediata para avaliação dos danos. Caso o veículo não tenha condições de continuar em movimento, o jogador deverá buscar um mecânico para reparo.</p>
+                <p>16.2 - É permitido o uso de escadarias, rampas e saltos ultilizando veículos.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">17.0 - METAGAMING</h3>
+                <p>17.1 - Refere-se à utilização de informações obtidas fora do Roleplay (RP) para influenciar as ações do personagem dentro do jogo. Isso inclui informações descobertas por meios externos (fora do RP), como conversas em outros aplicativos, lives, vídeos ou qualquer outra fonte que não seja parte da experiência do personagem dentro do jogo. O Metagaming pode ser usado para obter vantagem indevida, prejudicar outros jogadores ou quebrar a imersão no RP.</p>
+                <p>17.2 - É expressamente proibido utilizar informações externas para influenciar as ações do personagem dentro do RP. Todas as informações utilizadas dentro do RP devem ser obtidas através da interação do personagem com o ambiente e com outros personagens dentro do jogo.</p>
+                <p>17.3 - A comunicação entre jogadores deve ser feita inteiramente dentro do jogo, utilizando os recursos disponíveis, como rádio e celular. É proibido comunicar informações relevantes para o RP por outros meios que não envolvam a cidade, como aplicativos de mensagens instantâneas ou redes sociais.</p>
+                <p>17.4 - Jogadores que praticam Metagaming estão sujeitos a advertências, banimentos temporários ou permanentes, dependendo da gravidade da infração e da reincidência. A administração do servidor avaliará cada caso individualmente para determinar a punição adequada.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">18.0 - REVENGE KILL</h3>
+                <p>18.1 - Refere-se à ação de buscar vingança contra um ou mais jogadores por uma ação que resultou na morte do seu personagem, independentemente da forma como a informação foi obtida (por meio de um amigo, mensagem no celular, etc.). A premissa do RK é que o personagem morto não possui memória do ocorrido, a menos que haja uma justificativa narrativa específica dentro do Roleplay.</p>
+                <p>18.2 - É expressamente proibido buscar vingança contra um jogador que matou seu personagem, a menos que haja uma justificativa narrativa forte e coerente dentro do RP. A memória do personagem sobre o ocorrido deve ser condizente com a história do personagem e as regras do servidor.</p>
+                <p>18.3 - Se o personagem foi morto, ele deve esquecer a situação, a menos que o jogador que o matou tenha explicitamente mencionado que a vítima se lembraria do ocorrido durante o RP. Caso contrário, o personagem deverá esquecer os últimos 15 minutos que antecederam sua morte ou o contexto da ação que levou à sua morte, o que for mais apropriado para a situação.</p>
+                <p>18.4 - Um jogador é morto em um tiroteio e, ao retornar ao jogo com seu personagem, busca vingança contra o jogador que o matou, sem que haja uma justificativa narrativa para essa lembrança. Um jogador é morto por um grupo de jogadores e, ao retornar ao jogo, reúne seus amigos para se vingar, utilizando informações que seu personagem não teria acesso dentro do RP.</p>
+                <p>18.5 - Jogadores que praticam Revenge Kill estão sujeitos a advertências, banimentos temporários ou permanentes, dependendo da gravidade da infração e da reincidência. A administração do servidor avaliará cada caso individualmente para determinar a punição adequada.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">19.0 - COP BAIT</h3>
+                <p>19.1 - Refere-se a qualquer atitude que tenha a finalidade de enganar, trapacear e/ou emboscar alguém de forma desonesta e desonrosa, visando apenas o benefício próprio. Ações Consideradas Cop Bait Simular uma situação de emergência para atrair polícia para uma emboscada.</p>
+                <p>19.2 - Cop Bait entre Ilegais Não existe Cop Bait entre jogadores ilegais. As interações entre jogadores ilegais são regidas por outras regras do servidor, como as regras de combate e RDM.</p>
+                <p>19.3 - As punições para Cop Bait serão consideradas gravíssimas, devido à natureza desonesta e prejudicial dessa prática. Jogadores que praticam Cop Bait estão sujeitos a advertências, banimentos temporários ou permanentes, dependendo da gravidade da infração e da reincidência.</p>
+                <p>19.4 - Obs: A administração do servidor avaliará cada caso individualmente para determinar se houve Cop Bait, levando em consideração o contexto e a intenção por trás das ações do jogador.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">20.0 - FLAMING</h3>
+                <p>20.1 - Refere-se a qualquer interação hostil ou ofensiva que tenha a intenção de inflamar uma situação ou pessoa negativamente, incitando o ódio, ofensas e ameaças direcionadas. O Flaming pode ocorrer em diversas formas, como insultos, humilhações, provocações, discriminação e outras atitudes que visem prejudicar emocionalmente outros jogadores.</p>
+                <p>20.2 - É expressamente proibido qualquer tipo de Flaming, seja ele dentro do jogo (in-game), em plataformas de comunicação externas (Discord, redes sociais, plataformas de live stream, etc.) ou por qualquer outro meio de comunicação. O respeito mútuo e a civilidade devem prevalecer em todas as interações entre jogadores.</p>
+                <p>20.3 - Utilizar linguagem ofensiva ou discriminatória contra outros jogadores. Fazer ameaças ou incitar a violência contra outros jogadores. Humilhar ou ridicularizar outros jogadores por seus erros ou escolhas. Assediar ou perseguir outros jogadores de forma persistente. Criar conteúdo (textos, imagens, vídeos) com o objetivo de ofender ou denegrir outros jogadores.</p>
+                <p>20.4 - Jogadores que praticam Flaming estão sujeitos a advertências, banimentos temporários ou permanentes, dependendo da gravidade da infração e da reincidência. A administração do servidor avaliará cada caso individualmente para determinar a punição adequada.</p>
+                <p>20.5 - É proibido qualquer tipo de flaming seja ele em game, discord ou em qualquer outro método de comunicação social (redes sociais, plataformas de live stream e etc).</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">21.0 - DARK RP</h3>
+                <p>21.1 - Refere-se à prática de Roleplay que envolve temas pesados e perturbadores, como assédio, estupro, racismo e outras ações preconceituosas, invasivas e absurdas. O Dark RP ultrapassa os limites do Roleplay aceitável e pode causar danos emocionais aos jogadores envolvidos.</p>
+                <p>21.2 - Qualquer forma de Roleplay que envolva os temas mencionados acima será considerada uma infração gravíssima e sujeita a punições severas.</p>
+                <p>21.3 - A prática de Dark RP é passível de banimento permanente do servidor, sem direito a recurso. A administração do servidor não tolerará qualquer forma de Roleplay que envolva temas pesados e prejudiciais à integridade dos jogadores.</p>
+                <p>21.4 - Obs: A administração do servidor avaliará cada caso individualmente para determinar se houve Dark RP, levando em consideração o contexto e a intenção por trás das ações do jogador.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">22.0 - FORÇAR RP</h3>
+                <p>22.1 - Refere-se à ação de criar situações desnecessárias e forçadas com o objetivo de gerar ações de tiroteio, morte ou perseguição, sem que haja uma justificativa narrativa coerente dentro do Roleplay. Forçar RP prejudica a imersão e a experiência dos outros jogadores, pois impõe situações artificiais e quebram a lógica do Roleplay.</p>
+                <p>22.2 - A liberdade de Roleplay de um jogador termina onde começa a liberdade de Roleplay de outro jogador. Não é permitido forçar outros jogadores a participarem de situações de RP que eles não desejam.</p>
+                <p>22.3 - Não é permitido forçar a entrada em situações de RP que o jogador não faz parte. O jogador deve buscar interagir com outros personagens de forma natural e espontânea, sem forçar a participação em Roleplays alheios.</p>
+            </div>
+            <div class="card">
+                <h3 style="color: var(--red);">23.0 - FURTO E ROUBO</h3>
+                <p>23.1 - FURTO: Ocorre quando um jogador pega itens ou veículos de outro sem que haja abordagem direta, ameaça ou violência. Exemplo: Roubar um carro destrancado sem que o dono perceba. Passar lockpick sem que o dono não esteja por perto.</p>
+                <p>23.2 - ROUBO: Acontece quando há abordagem direta, intimidação ou uso de força contra outro jogador. Exemplo: Assaltar um jogador apontando uma arma e exigindo seus pertences. Render um motorista para roubar seu veículo.</p>
+            </div>
+        </div>    
+    
+        <div id="regras-hospital-e-bombeiros" class="subtab-content">
+            <div class="card">
+                <h3>25.0 - Regras Hospital e Bombeiros</h3>
+                <p>25.1 - Após reanimar um jogador, caso seja solicitado ou o jogador apresente ferimentos graves, o profissional de saúde/bombeiros deve acompanhá-lo até o hospital para receber atendimento adequado. Após reanimar um jogador, caso seja solicitado ou o jogador apresente ferimentos graves, o profissional de saúde/bombeiro deve acompanhá-lo até o hospital para receber atendimento adequado. A recusa do jogador deve ser oferecido a ele bandagem.</p>
+                <p>25.2 - Em ações de roubo a banco, loja ou joalheria, é necessário aguardar a finalização da ação para prestar socorro. A prioridade de atendimento deve ser dada aos vitoriosos na ação, seguindo a regra de finalização.</p>
+                <p>25.3 - Em áreas de favela, quando não houver nenhuma ação em andamento, os profissionais de saúde/bombeiros podem exercer suas funções normalmente, com o consentimento do dono do local. Não é permitido mirar armas para os médicos/bombeiros nessas situações. Médicos/Bombeiros fardados não podem ser mortos, assaltados, saqueados.</p>
+                <p>25.4 - O uso do helicóptero é restrito à Diretoria e Médicos, salvo mediante autorização expressa dos diretores. Caso o helicóptero de um profissional de saúde/bombeiros seja furtado, ele deve fazer uma denúncia à Policia.</p>
+                <p>25.5 - O médico/bombeiros pode levantar, curar ou fazer o tratamento de qualquer pessoa, seja policial, criminoso ou civil, desde que a ação em que essa pessoa estiver envolvida já tenha sido finalizada. A finalização da ação deve ser comunicada para ele.</p>
+                <p>25.6 - Se o jogador estiver com pressa, ele não deve ir ao hospital. Os médicos/bombeiros realizarão os exames necessários para avaliar cada caso, e o jogador deve respeitar o RP do Médico.</p>
+                <p>25.7 - Desrespeito e bagunça dentro e nas dependências do Hospital são passíveis de multa e/ou advertência.</p>
+                <p>25.8 - A ordem dos médicos é soberana. Se o médico/bombeiro determinar que o paciente precisa ficar em observação ou necessita de um tratamento específico, o jogador deve colaborar com o seu RP.</p>
+                <p>25.9 - É proibido ignorar qualquer paramédico ou médico no hospital e correr para o local de cura sem ter feito um RP prévio. Em caso de denúncias, serão aplicadas advertências.</p>
+            </div>
+        </div>
+    
+        <div id="regras-gravidez-e-kids" class="subtab-content">
+            <div class="card">
+                <h3>26.0 - Regras de Gravidez</h3>
+                <p>26.1 - O sequestro de grávidas e crianças é permitido, desde que haja motivos plausíveis dentro do Roleplay e que a segurança e o bem-estar da grávida ou criança sejam garantidos, incluindo cuidados especiais. O sequestro não pode ter como objetivo causar o desmaio da grávida ou da criança.</p>
+                <p>26.2 - Grávidas podem se envolver em atividades criminosas, desde que não coloquem suas vidas e a vida do bebê em risco. A troca de tiros é expressamente proibida a partir do momento em que a gravidez é descoberta.</p>
+                <p>26.3 - Grávidas não podem andar em motocicletas ou bicicletas, nem serem carregadas em veículos ou por cordas.</p>
+                <p>26.4 - Crianças podem frequentar áreas de risco, como guetos e favelas, desde que não sejam expostas a situações de risco ou participem de brincadeiras envolvendo itens ilegais.</p>
+                <p>26.5 - Crianças não podem, em hipótese alguma, carregar qualquer tipo de armamento, sejam armas de fogo (calibre) ou armas brancas (tacos, facas, tasers), drogas, coletes à prova de balas ou qualquer outro item ilegal.</p>
+                <p>26.6 - Crianças não podem andar em motocicletas ou bicicletas de adulto. Crianças não podem andar no banco da frente de veículos.</p>
+                <p>26.7 - O Roleplay de gravidez ou infantil poderá ser cancelado caso o jogador não siga todas as instruções da pediatra e/ou não compareça obrigatoriamente a todas as consultas e RPs que envolvam o desenvolvimento da gravidez ou da criança.</p>
+                <p>26.8 - Crianças não podem gadar ou namorar, a quebra dessa regra ocorrá na perda da skin.</p>
+                <p>26.9 - Crianças não podem frequentar lugares +18(boates).</p>
+            </div>
+        </div>
+    
+        <div id="regras-safezones" class="subtab-content">
+            <div class="card">
+                <h3>27.0 - Regras de Safezone</h3>
+                <p>27.1 - Áreas Consideradas Safezones: é proibido roubar, camperar, atirar ou sequestrar nas seguintes áreas: Prefeitura, Restaurantes, Hospital, Praça, Mecanicas, Bombeiros, Judiciario, Dps de Policia, Pier.</p>
+                <p>27.2 - A polícia está autorizada a realizar abordagens em safezones em caso de denúncias ou quando houver motivos plausíveis para a abordagem (como um jogador utilizando máscara, coldre ou acessórios militares de forma suspeita), ou em caso de fuga para safezone.</p>
+                <p>27.3 - É expressamente proibido iniciar uma ação (como um tiroteio ou perseguição) próximo a uma área safe e correr para a mesma ou qualquer outra safezone para evitar as consequências da ação.</p>
+                <p>27.4 - É proibido utilizar "JBL" ou /som (comandos de som) em qualquer área safe. Essa regra visa evitar problemas de direitos autorais em transmissões ao vivo (lives) e manter a tranquilidade nas áreas seguras.</p>
+            </div>
+        </div>
+    
+        <div id="regras-personagem" class="subtab-content">
+            <div class="card">
+                <h3>28.0 - Regras do Personagem</h3>
+                <p>28.1 - Ao criar um personagem, o jogador deve utilizar nomes realistas e apropriados ao contexto do servidor, evitando palavrões, trocadilhos ou qualquer nome que comprometa a imersão dos demais. Além disso, o gênero do personagem deve corresponder ao gênero com o qual o jogador se identifica, garantindo coerência e respeito ao ambiente de roleplay.</p>
+            </div>
+        </div>
+    
+        <div id="regras-de-denuncia" class="subtab-content">
+            <div class="card">
+                <h3>29.0 - Regras de Denúncia</h3>
+                <p>29.1 - Detalhamento da Ocorrência: Ao registrar sua denúncia, apresente todos os detalhes relevantes. Descreva de forma clara e organizada o que aconteceu, quem estava envolvido, a conduta do(s) denunciado(s), a possível infração cometida, além da data, horário e local exato do ocorrido. </p>
+                <p>29.2 - Comprovação em Vídeo: O vídeo anexado deve ter no mínimo 1 minuto, conter áudio e vídeo do jogo e capturar o uso do microfone ingame. Exceções são aceitas apenas quando o contexto não for necessário e a infração estiver claramente visível, mesmo em vídeos mais curtos. </p>
+                <p>29.3 - Proibição de “Revenge Tickets”: Não serão aceitas denúncias feitas com o intuito de vingança por punições ou alinhamentos recebidos. A denúncia deve ser registrada antes de qualquer punição ou alinhamento relacionado ao próprio denunciante.</p>
+                <p>29.4 - Responsabilidade Compartilhada: Se durante a análise for identificado que o autor da denúncia também cometeu alguma infração, ele poderá ser advertido ou punido, conforme a gravidade da conduta.</p>
+                <p>29.5 - Denúncias em Nome de Terceiros: Não é permitido registrar denúncias por outras pessoas. Apenas quem estava diretamente envolvido pode denunciar. Exemplo de caso não aceito: "Quero denunciar porque meu amigo sofreu RDM". Salvo em casos de Lider de Organização ou Facção, que pode resolver pelos seus membros.</p>
+                <p>29.6 - Uso de Transmissões (Lives): Trechos de lives de terceiros só serão aceitos se forem acompanhados da gravação pessoal do autor da denúncia, mostrando sua própria visão. Os dois vídeos devem ser complementares para que a análise seja válida. </p>
+                <p>29.7 - Prazo para Denúncia: O ticket deve ser aberto em até 48 horas após o ocorrido.</p>
+                <p>29.8 - Envio do Vídeo: O vídeo deve ser enviado por link de plataforma externa (como YouTube, Drive, etc.), anexado ao ticket.</p>
+                <p>29.9 - Proibição de Call Externa: Vídeos contendo call externa (comunicação fora do jogo) não serão aceitos como prova.</p>
+                <p>29.10 - É necessário, após qualquer ação realizada dentro do servidor, ter o CLIP salvo por, pelo menos 7 dias.</p>
+                <p>29.11 - Caso formate o computador após qualquer ação realizada sem motivos plausíveis, poderá ser banido por tempo indeterminado do servidor.</p>
+                <p>29.12 - Não é permitido gravar, clipar ou compartilhar trechos de calls de alinhamento realizadas pela equipe administrativa. Essas reuniões são de caráter interno e confidencial, sendo voltadas exclusivamente para orientação e resolução de situações. O descumprimento desta regra poderá resultar em punições administrativas, de acordo com a gravidade da conduta.</p>
+                <p>29.13 - Não é permitido nenhum tipo de indicação dentro do roleplay de que você está gravando, transmitindo o cenário atual dentro do game;</p>
+            </div>
+        </div>
+
+        <div id="regras-policia" class="subtab-content">
+            <div class="submenu">
+                <a onclick="openSubSubTab('conduta')" id="subsublink-regras-de-conduta">Regras de Conduta Policial</a>
+                <a onclick="openSubSubTab('corrupcao')" id="subsublink-regras-de-corrupcao">Regras de Corrupção Policial</a>
+                <a onclick="openSubSubTab('fuga')" id="subsublink-regras-de-fuga">Regras de Fuga e Perseguição</a>                
+                <a onclick="openSubSubTab('ro')" id="subsublink-regras-de-ro">Regras de RONDA OSTENSIVA (R.O.)</a>
+                <a onclick="openSubSubTab('incursao')" id="subsublink-regras-de-incursao">Regras de INCURSÃO</a>
+                <a onclick="openSubSubTab('pacificacao')" id="subsublink-regras-de-pacificacao">Regras de PACIFICAÇÃO</a>
+            </div>
+    
+                <div id="conduta" class="subsubtab-content">
+                <div class="card">
+                <h3>30.0 - Regras de Conduta Policial</h3>
+                <p>30.1 - Honrar a farda. (proibido tráfico de pertences apreendidos)</p>
+                <p>30.2 - Em perseguição é proibido colidir com outro veículo, seja moto, carro, etc. (valorize a perseguição)</p>
+                <p>30.3 - É proíbo que o policial aborde e reviste sem motivo.</p>
+                <p>30.4 - São no mínimo 2 Policiais pra patrulhar, se não houver contingente suficiente de policiais para iniciar patrulhamento, não inicie sozinho. Nesses casos, deve permanecer no DP.</p>
+                <p>30.5 - Sempre que atingir o contingente mínimo de policiais, os mesmos devem iniciar patrulhamento o mais rápido possível.</p>
+                <p>30.6 - Sempre que estiver em patrulhamento, é obrigatório o uso do código Q para comunicação no rádio.</p>
+                <p>30.7 - Os policiais podem patrulhar em locais de risco (favelas e bairros), sendo assim, devem estar cientes de todos os riscos que estão correndo.</p>
+                <p>30.8 - Recrutas não podem patrulhar sem a presença de uma patente superior.</p>
+                <p>30.9 - É expressamente proibido acampar locais de processamento, mesmo com denúncias, com exceção de ações que podem iniciar fora ou em casos de invasões.</p>
+                <p>30.10 - Todos os recrutas que ingressarem na corporação entram em período de teste e podem ser exonerados a qualquer momento.</p>
+                <p>30.11 - Ausências devem ser justificadas, sendo assim, ficar mais de 2 dias ausente sem justificativa pode acarretar punições pelo Comandante. Em casos de ausência maior que esse período, será exonerado.</p>
+                <p>30.12 - Só deve prender um meliante após levá-lo para dentro da delegacia e colocá-lo na cela.</p>
+                <p>30.13 - É proibido estar sem farda enquanto está em de serviço, salvo em situações de investigação ou emboscada.</p>
+                <p>30.14 - Sempre seguir as leis a partir do Código Penal. A multa pode ser aplicada no local da abordagem, fiança apenas na delegacia.</p>
+                <p>30.15 - Aceitar suborno é permitido. (podendo sofrer consequências no RP).</p>
+                <p>30.16 - Obrigatório RP prévio antes de qualquer aplicação de pena ou prisão de qualquer indivíduo.</p>
+                </div>
+                </div>
+    
+                <div id="corrupcao" class="subsubtab-content">
+                <div class="card">
+                <h3>30.0 - Regras de Corrupção Policial</h3>
+                <p>30.1 - Toda negociação fora do sistema oficial da polícia (caixa 2) está estritamente proibida sem autorização prévia da administração.</p>
+                <p>30.2 - Somente a corrupção de venda de informações está liberada. Caso seja pego fazendo, será exonerado, preso (pena e multa máxima) e impossibilitado de entrar em qualquer serviço público.</p>
+                </div>
+                </div>
+    
+                <div id="fuga" class="subsubtab-content">
+                <div class="card">
+                <h3>30.0 - Regras de Fuga e Perseguição</h3>
+                <p>30.1 - Após 5 minutos de fuga, é permitido o uso do Código 3 (tiro no pneu). Exceto em circunstâncias onde os bandidos atiram contra a guarnição, colocam em perigo a vida de inocentes ou caso o fugitivo passe 3 vezes por áreas movimentadas.</p>
+                <p>30.2 - É proibido atirar em um carro que está dando fuga, exceto quando: </p>
+                    <p>30.2.1 - Atirarem contra a guarnição.</p>
+                    <p>30.2.2 - Colocarem a vida de um inocente em risco.</p>
+                    <p>30.2.3 - PowerGaming, como capotar o carro e nem era mais para o meliante estar dando fuga, e mesmo assim continuou.</p>
+                    <p>30.2.4 - Caso o indivíduo abra fogo contra a Policia, ele deve ser neutralizado.</p> 
+                    <p>30.2.5 - Se o fugitivo colidir o veículo ou capotar, deve descer rendido.</p>  
+                    <p>30.3.6 - Receber ajuda de terceiros.</p>
+                    <p>30.3.7 - Reparar o veículo durante a fuga.</p>
+                    <p>30.3.8 - Usar rádio para pedir ajuda.</p>
+                    <p>30.3.9 - Atropelar alguém propositalmente.</p>
+                <p>30.3 - Proibida a utilização de qualquer tipo de arma de fogo durante as corridas clandestinas ou no resgate na fuga das mesmas, em caso de abordagem não é permitido QRR após a rendição.</p>
+                </div>
+                </div>    
+            
+                <div id="ro" class="subsubtab-content">
+                    <div class="card">
+                        <h3>31.0 - O que é RONDA OSTENSIVA (R.O.)?</h3>
+                        <p>31.0.1 - A Ronda Ostensiva nada mais é que uma patrulha de reconhecimento realizada pelas FORÇAS DE ELITE, com foco em abordagens, fiscalização e inibição de atividades criminosas dentro das comunidades.</p>
+                        <p>31.0.2 - A R.O é considerada uma ação de abordagem e presença ostensiva, não sendo caracterizada como invasão, ataque ou evento de PVP.</p>
+                        <p>31.0.3 - É proibido utilizar a R.O com intuito exclusivo de gerar confronto armado, trocação ou movimentação sem contexto RP.</p>
+                        <p>31.0.4 - Qualquer abuso da R.O para perseguição, anti-RP ou favorecimento será passível de punição administrativa.</p>
+                    </div>
+                    <div class="card">
+                        <h3>31.1 - Quais requisitos para fazer um R.O?</h3>
+                        <p>31.1.1 - Qualquer uma das situações devem haver provas para fazer o R.O:</p>
+                        <p>31.1.1.1 - Atirar de dentro pra fora.</p>
+                        <p>31.1.1.2 - Ao menos 5 QRU de disparo no local.</p>
+                        <p>31.1.1.3 - Indivíduo armado na porta ou atividade suspeita.</p>
+                        <p>31.1.1.4 - Fuga para dentro de favela ou QG.</p>
+                    </div>
+                    <div class="card">
+                        <h3>31.2 - Como executar o R.O?</h3>
+                            <p>31.2.1 - O Policial deve postar a prova no e-mail, na pasta de provas de R.O.</p>
+                            <p>31.2.2 - A polícia pode fazer R.O sem aviso informal a qualquer facção, somente deve ter permissões dos COMANDOS.</p>
+                            <p>31.2.3 - A Polícia deve ir com o contingente de ao menos 10 policiais.</p>
+                            <p>31.2.4 - Como explicado anteriormente é apenas revista, nada de troca de tiro, se os suspeitos não tiver nada ilegal com ele é liberado, se algum dos suspeitos tiver algo ilegal deve ser conduzido para a dp, e todos as regras de prisão devem ser aplicadas, inclusive a lei de Miranda.</p>
+                            <p>31.2.5 - Se houver iniciação de tiro por parte da Polícia, poderá ser julgado pela corregedoria, o que pode ser punido com a perda da farda.</p>
+                            <p>31.2.6 - Se houver iniciação de tiro por parte dos bandidos, o R.O vira automaticamente uma incursão e a Polícia pode chamar QRR.</p>
+                            <p>31.2.7 - Durante um R.O sem um motivo plausível e/ou aparente, os policiais ficam PROIBIDOS de sair de suas viaturas.</p>
+                            <p>31.2.8 - Durante um R.O que se torna uma incursão o qrr do lado policial pode ser solicitado de todas as guarnições.</p>                       
+                    </div>
+                    <div class="card">
+                        <h3>31.3 - Quais horários podem acontecer o R.O? </h3>
+                            <p>31.3.1 - Por obrigação a Polícia deve executar o R.O no máximo 20 minutos após o ocorrido, não será aceito provas que aconteceu após passado esse tempo e muito menos de dias anteriores.</p>
+                            <p>31.3.1 - Horários da vida real  permitidos para realização dos R.O:</p>
+                            <p>🕛 17:00 às 19:30</p>
+                            <p>🕛 21:00 às 23:00</p>
+                            <p>31.3.1.2 - Situações ocorridas entre 19:30 e 21:00, será permitido guardar para ser realizado o R.O as 21:00.</p>
+                            <p>31.3.1.2 - Situações ocorridas fora desses horários vira automaticamente provas para iniciar uma incursão ou investigação para pacificação.</p>
+                    </div>
+                    <div class="card">
+                        <h3>31.4 - Quais os limites de R.O de uma dp? </h3>
+                        <p>31.4.1 - Não há limite diário por DP, sendo assim poderá fazer R.O em qualquer uma das facções diariamente, se houver provas e respeitar o cloodown do item 31.4.2.</p>
+                        <p>31.4.2 - Porém cada DP só poderá realizar 1 RO por semana numa mesma facção, nesse período se acontecer alguma dessas situações a polícia deverá guardar como provas para abrir uma incursão ou investigação para pacificação.</p>
+                    </div>
+                    <div class="card">
+                        <h3>31.5 - Limite de veículos:</h3>
+                        <p>31.5.1 - É extremamente proibido o uso de helicópteros, veículos blindados ou qualquer veículo de caráter bélico durante a R.O.</p>
+                    </div>
+                </div>    
+            
+                <div id="incursao" class="subsubtab-content">
+                <div class="card">
+                  <h3>31.0 - O que é INCURSÃO?</h3>
+                  <p>32.0.1 - A INCURSÃO é o ato da polícia adentrar a favela e/ou organização para neutralizar um grupo.</p>
+                    </div>
+                <div class="card">
+                  <h3>31.1 - Quais requisitos para fazer uma INCURSÃO?</h3>
+                  <p>32.1.1 - É obrigatório que tenha motivos válidos juntamente com provas para que seja iniciada uma incursão, para assim ter como comprovar a legitimidade da ação.</p>
+                  <p>32.1.2 - DOCUMENTOS NECESSÁRIOS PARA REALIZAR UMA INCURSÃO:</p>
+                            <p>32.1.2.1 - </p>
+                  <p>32.6 - </p>
+                  <p>32.7 - </p>
+                  <p>32.8 - </p>
+                  <p>32.9 - </p>
+                </div>
+                </div>    
+            
+                <div id="pacificacao" class="subsubtab-content">
+                <div class="card">
+                <h3>32.0 - Regras de PACIFICAÇÃO</h3>
+                  <p>33.1 - </p>
+                  <p>33.2 - </p>
+                  <p>33.3 - </p>
+                  <p>33.4 - </p>
+                  <p>33.5 - </p>
+                  <p>33.6 - </p>
+                  <p>33.7 - </p>
+                  <p>33.8 - </p>
+                  <p>33.9 - </p>
+                </div>
+                </div>
+        </div>
+    </div>
+
+    <div id="acao" class="tab-content">
+        <h1>REGRAS DE AÇÃO</h1>
+        <div class="submenu">
+            <a onclick="openSubTab('acao-assalto')" id="sublink-acao-assalto">Assalto</a>
+            <a onclick="openSubTab('acao-sequestro')" id="sublink-acao-assalto">Sequestro</a>
+            <a onclick="openSubTab('acao-banco-central')" id="sublink-acao-banco-central">Banco Central</a>
+            <a onclick="openSubTab('acao-niobio')" id="sublink-acao-niobio">Nióbio</a>
+            <a onclick="openSubTab('acao-banco-de-paleto')" id="sublink-acao-banco-de-paleto">Banco de Paleto</a>
+            <a onclick="openSubTab('acao-banco-pine')" id="sublink-acao-banco-pine">Banco Pine</a>
+            <a onclick="openSubTab('acao-acougue')" id="sublink-acao-acougue">Açougue</a>
+            <a onclick="openSubTab('acao-galinheiro')" id="sublink-acao-galinheiro">Galinheiro</a>
+            <a onclick="openSubTab('acao-faculdade')" id="sublink-acao-faculdade">Faculdade</a>
+            <a onclick="openSubTab('acao-joalheria')" id="sublink-acao-joalheria">Joalheria</a>
+            <a onclick="openSubTab('acao-observatorio')" id="sublink-acao-observatorio">Observatório</a>
+        </div>
+        
+        <div id="acao-assalto" class="subtab-content">
+            <div class="card">
+                <h3>📸 Horários na cidade:</h3>
+                <p> Norte: 07:00 até 13:00</p>
+                <p> Ilha Marine: 00:00 até 05:00</p>
+            </div>
+            <div class="card">
+                <h3>📸 Regras geral</h3>
+                <p style="color: var(--red);">🚫 Proibido call externa(metagaming).</p>
+            </div>
+            <div class="card">
+                <h3>🦹 Regras Bandido</h3>
+                <p style="color: var(--yellow);">⚠️ É extremamente necessário o voip estar ligado no máximo.</p>
+                <p style="color: var(--green);">✅ Permitido apenas 2 veículos juntos para realizar do assalto.</p>
+                <p style="color: var(--green);">✅ Permitido máximo de 4 pessoas por carro.</p>
+                <p style="color: var(--green);">✅ Permitido máximo de 2 pessoas por moto.</p>
+                <p style="color: var(--green);">✅ Permitido solicitar QRR.</p>
+                <p style="color: var(--green);">✅ Permitido assaltantes de facções diferentes realizar a ação juntos.</p>
+                <p style="color: var(--red);">🚫 Proibido QRR colado(no mínimo uma quadra de distância).</p>
+                <p style="color: var(--red);">🚫 Proibido matar sem dá voz de assalto.</p>
+                <p style="color: var(--red);">🚫 Proibido assaltantes no porta-malas do veículo.</p>
+            </div>
+            <div class="card">
+                <h3>📸 Regras Vítima</h3>
+                <p style="color: var(--yellow);">⚠️ Não é necessário o voip estar ligado, mas precisa ser avisado que está sem voz no /me.</p>
+                <p style="color: var(--red);">🚫 Proibido anti-amor à vida.</p>
+                <p style="color: var(--red);">🚫 Proibido fuga para área safe.</p>
+            </div>
+        </div>
+        
+        <div id="acao-sequestro" class="subtab-content">
+            <div class="card">
+                <h3>📸 Sequestro</h3>
+                <p> Horários na cidade:
+                     20:00 até 00:00</p>
+            </div>
+            <div class="card">
+                <h3>📸 Regras geral</h3>
+                <p style="color: var(--yellow);">⚠️ Tempo máximo do sequestro: 60 minutos.</p>
+                <p style="color: var(--red);">🚫 Proibido call externa(metagaming).</p>
+            </div>
+            <div class="card">
+                <h3>🦹 Regras Bandido</h3>
+            <p style="color: var(--yellow);">⚠️ É extremamente necessário o voip estar ligado no máximo.</p>
+            <p style="color: var(--green);">✅ Permitido levantar o morto com adrenalina para sequestrar.</p>
+            <p style="color: var(--green);">✅ Permitido remover da vítima viva somente rádio, celular e arma(não inclui munição).</p>
+            <p style="color: var(--green);">✅ O valor máximo permitido para o resgate é de 5.000.000(se for cargo alto de sua organização ou facçção).</p>
+            <p style="color: var(--red);">🚫 Proibido sequestrar sem os itens algemas e capuz.</p>
+            <p style="color: var(--red);">🚫 Proibido sequestrar morto.</p>
+            <p style="color: var(--red);">🚫 Proibido sequestrar dentro de Orgãos Públicos e Área Safe.</p>
+            <p style="color: var(--red);">🚫 Proibido matar a vítima se ela estiver colaborando.</p>
+            <p style="color: var(--red);">🚫 Proibido matar somente para saquear os itens da vitima.</p>
+            <p style="color: var(--red);">🚫 Proibido anti-amor à vida.</p>
+            <p style="color: var(--red);">🚫 Proibido call externa(metagaming).</p>
+            </div>
+            <div class="card">
+                <h3>📸 Regras Vítima</h3>
+                <p style="color: var(--yellow);">⚠️ Não é necessário o voip estar ligado, mas precisa ser avisado que está sem voz no /me.</p>
+                <p style="color: var(--yellow);">⚠️ É extremamente necessário colaborar com o sequestro, Em qualquer ação o refém deve sempre seguir a história que está ocorrendo no momento e preservar por sua vida. Policiais devem sempre fazer o máximo para resgatá-los com vida.</p>
+                <p style="color: var(--red);">🚫 Proibido anti-amor à vida(ficar pedindo para ser morto, xingando os bandidos e etc).</p>
+            </div>
+        </div>
+        
+        <div id="acao-banco-central" class="subtab-content">
+            <div class="card">
+                <h3>BANCO CENTRAL</h3>
+                <p>Ilegal marcar essa ação ganha 1.650 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Pistola, SMG e Fuzil.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 15 / Máximo 20.</p>
+                <p>Policiais: Mínimo 18 / Máximo 22.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--blue);">📲 CHAMADO obrigatório dos bandidos para a polícia após terminar a ação, informando o contingente de bandidos vivos.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO extremamente necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">✅ PERMITIDO uso de até 5 reféns na ação(não obrigatório o uso de refém).</p>
+                <p style="color: var(--green);">✅ PERMITIDO apenas 2 criminosos do lado de fora do Banco Central para negociar(antes da ação começar).</p>
+                <p style="color: var(--green);">✅ PERMITIDO uso de helicóptero por parte da Polícia(mas apenas 1 atirador no veículo).</p>
+                <p style="color: var(--green);">✅ PERMITIDO negociação de fuga totalmente limpa, mas não poderá disparar caso perca a fuga.</p>
+                <p style="color: var(--green);">✅ PERMITIDO em caso de fuga: 3 Speed, e 2 motos, e 2 Helicóptero.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do FF da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO a policia fazer o perímetro antes de anunciar o "FF"</p>
+                <p style="color: var(--red);">🚫 PROIBIDO negociação de rush, quantidade de dinheiro, contingente ou remoção de heli e etc).</p>
+                <p style="color: var(--red);">🚫 PROIBIDO colocar veiculo na porta do banco para interdita a entrada da policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO entrar com o veículo dentro do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+            </div>
+            <div class="card">
+                <h3>📢 O QUE PODE SER NEGOCIADO?</h3>
+                <p>1 Refém = Negociação de entrada (P1 e P2);</p>
+                <p>2 Refém = Helicóptero para retirar atiradores (DEIXAR HELI DRONES,NÃO PODE DROPAR, NÃO PODE USAR PARAQUEDAS)</p>
+                <p>1 Refém = teti-chão (SUBIR PRÉDIO)</p>
+                <p>2 Reféns = Tira total helicóptero (É OBRIGATÓRIO SER TETI-CHÃO)</p>
+                <p>4 Reféns = Negociação dedicada Tirar demais situações</p>
+                <p>Se for negociar dinheiro sujo: R$ 20.000,00 a R$ 30.000,00 para um cidadão normal e R$ 80.000,00 para PMS (Comandos e Delegados/Diretor do HP)</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa</h3>
+                <p>Ilegal: R$ 11.000.000 (SUJO).</p>
+                <p>Policia: R$ 7.700.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/JhF6pWVj/BANCO-CENTRAL.png" alt="Foto BC" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-banco-de-paleto" class="subtab-content">
+            <div class="card">
+                <h3>BANCO DE PALETO</h3>
+                <p>Ilegal marcar essa ação ganha 1.320 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Todos os calibres.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 10 / Máximo 16.</p>
+                <p>Policiais: Mínimo 12 / Máximo 18.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--blue);">📲 CHAMADO obrigatório dos bandidos para a polícia após terminar a ação, informando o contingente de bandidos vivos.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO não necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">✅ PERMITIDO até 3 criminosos do lado de fora do banco, somente em caso de não haver refém na ação.</p>
+                <p style="color: var(--green);">✅ PERMITIDO apenas 1 criminoso do lado de fora do banco, caso de não haja refém na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do "FF" da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de refém.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO subir em qualquer tipo de lugar, apenas chão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO entrar com o veículo dentro do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO colocar veiculo na porta do banco para interdita a entrada da policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 8.800.000 (SUJO).</p>
+                <p>Policia: R$ 6.160.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/vTp7FQHw/BANCO_DE_PALETO.png" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-banco-pine" class="subtab-content">
+            <div class="card">
+                <h3>BANCO PINE</h3>
+                <p>Ilegal marcar essa ação ganha 1.320 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Todos os calibres.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 10 / Máximo 16.</p>
+                <p>Policiais: Mínimo 12 / Máximo 18.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--blue);">📲 CHAMADO obrigatório dos bandidos para a polícia após terminar a ação, informando o contingente de bandidos vivos.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO não necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">✅ PERMITIDO até 3 criminosos do lado de fora do banco, somente em caso de não haver refém na ação.</p>
+                <p style="color: var(--green);">✅ PERMITIDO apenas 1 criminoso do lado de fora do banco, caso de não haja refém na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do "FF" da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de refém.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO subir em qualquer tipo de lugar, apenas chão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO entrar com o veículo dentro do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO colocar veiculo na porta do banco para interdita a entrada da policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 8.800.000 (SUJO).</p>
+                <p>Policia: R$ 6.160.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/sxtPdVfb/BANCO_PINE.png" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-niobio" class="subtab-content">
+            <div class="card">
+                <h3>NIÓBIO</h3>
+                <p>Ilegal marcar essa ação ganha 1.650 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Pistola, SMG e Fuzil</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 15 / Máximo 20.</p>
+                <p>Policiais: Mínimo 18 / Máximo 22.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--blue);">📲 CHAMADO obrigatório dos bandidos para a polícia após terminar a ação, informando o contingente de bandidos vivos.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO não necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">✅ PERMITIDO até 2 helicópteros da Polícia nesta ação.</p>
+                <p style="color: var(--green);">✅ PROIBIDO uso de reféns na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do "FF" da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de refém.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO subir em qualquer tipo de lugar, apenas chão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO entrar com o veículo dentro do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>                
+            </div>
+            <div class="card">
+                <h3>📢 O QUE PODE SER NEGOCIADO?</h3>
+                <p>1 Refém = Negociação de entrada (P1 e P2)</p>
+                <p>2 Refém = Negociação de armamento (Apenas Submetralhadoras e Fuzis)</p>
+                <p>3 Refém = Negociação de uso de veículos e marcação de pixel</p>
+                <p>4 Reféns = Negociação dedicada Tirar demais situações</p>
+                <p>Se for negociar dinheiro sujo: R$ 20.000,00 a R$ 30.000,00 para um cidadão normal e R$ 80.000,00 para PMS (Comandos e Delegados/Diretor do HP)</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 11.000.000 (SUJO).</p>
+                <p>Policia: R$ 7.700.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/ZnC89WDc/NIOBIO.png" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-acougue" class="subtab-content">
+            <div class="card">
+                <h3>AÇOUGUE</h3>
+                <p>Ilegal marcar essa ação ganha 1.240 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Pistola, SMG e Fuzil.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 10 / Máximo 15.</p>
+                <p>Policiais: Mínimo 12 / Máximo 18.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--blue);">📲 CHAMADO obrigatório dos bandidos para a polícia após terminar a ação, informando o contingente de bandidos vivos.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO não é necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">✅ PERMITIDO subir em qualquer lugar(teti-chão liberado).</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de refém.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do FF da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar fora do perímetro.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO criminosos do lado de fora do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO entrar com o veículo dentro do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 8.250.000 (SUJO).</p>
+                <p>Policia: R$ 5.775.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/4dVFFF1X/ACOUGUE.png" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-galinheiro" class="subtab-content">
+            <div class="card">
+                <h3>GALINHEIRO</h3>
+                <p>Ilegal marcar essa ação ganha 1.240 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Pistola, SMG e Fuzil.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 10 / Máximo 15.</p>
+                <p>Policiais: Mínimo 12 / Máximo 18.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO não necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">✅ PERMITIDO subir em qualquer lugar(teti-chão liberado).</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do "FF" da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar fora do perímetro.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO bandidos do lado de fora do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO negociação de rush, quantidade de dinheiro, contingente ou remoção de heli e etc).</p>
+                <p style="color: var(--red);">🚫 PROIBIDO colocar veiculo na porta para interditar a entrada da policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO entrar com o veículo dentro do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 8.250.000 (SUJO).</p>
+                <p>Policia: R$ 5.775.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/rFS6njJd/GALINHEIRO.png" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-faculdade" class="subtab-content">
+            <div class="card">
+                <h3>FACULDADE</h3>
+                <p>Ilegal marcar essa ação ganha 675 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Pistola e SMG.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 10 / Máximo 15.</p>
+                <p>Policiais: Mínimo 12 / Máximo 18.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO não necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO subir em qualquer tipo de lugar, apenas chão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do "FF" da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO usar heli na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de reféns na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO negociação de rush, quantidade de dinheiro, contingente ou remoção de heli e etc).</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 4.500.000 (SUJO).</p>
+                <p>Policia: R$ 3.150.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/gkwymt5p/FACULDADE.png" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-joalheria" class="subtab-content">
+            <div class="card">
+                <h3>JOALHERIA</h3>
+                <p>Ilegal marcar essa ação ganha 675 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Pistola e SMG.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 10 / Máximo 15.</p>
+                <p>Policiais: Mínimo 12 / Máximo 18.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO obrigatória.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">✅ PERMITIDO subir em qualquer lugar(teti-chão liberado).</p>
+                <p style="color: var(--green);">✅ PERMITIDO apenas 2 criminosos do lado de fora do estabelecimento.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do "FF" da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO usar heli na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de reféns na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar fora do perímetro.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO negociação de rush, quantidade de dinheiro, contingente ou remoção de heli e etc).</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 4.500.000 (SUJO).</p>
+                <p>Policia: R$ 3.150.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/rFdGMZbk/JOALHERIA.png" class="action-img">
+            </div>
+        </div>
+        
+        <div id="acao-observatorio" class="subtab-content">
+            <div class="card">
+                <h3>OBSERVATÓRIO</h3>
+                <p>Ilegal marcar essa ação ganha 450 tickets lavagem se a ação for aceita e comparecer na ação, independente do resultado.</p>
+            </div>
+            <div class="card">
+                <h3>🔫 Armamento:</h3>
+                <p>Pistola.</p>
+            </div>
+            <div class="card">
+                <h3>👥 Contingente:</h3>
+                <p>Bandidos: Mínimo 10 / Máximo 15.</p>
+                <p>Policiais: Mínimo 6 / Máximo 12.</p>
+            </div>
+            <div class="card">
+                <h3>📑 Regras:</h3>
+                <p style="color: var(--purple);">🕛 TOLERÂNCIA de 15 minutos em caso de atraso, caso não compareça, "GG" para o time que estiver completo.</p>
+                <p style="color: var(--yellow);">⚠️ Ação permitida apenas com facção formada.</p>
+                <p style="color: var(--yellow);">⚠️ NEGOCIAÇÃO não necessária.</p>
+                <p style="color: var(--yellow);">⚠️ RUSH obrigatório sempre da parte da policia.</p>
+                <p style="color: var(--green);">🚫 PROIBIDO subir em qualquer tipo de lugar, apenas chão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO atirar antes do "FF" da Policia.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO usar heli na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de reféns na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO negociação de rush, quantidade de dinheiro, contingente ou remoção de heli e etc).</p>
+                <p style="color: var(--red);">🚫 PROIBIDO uso de reféns na ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO Negociar apreensão de itens, em caso de vitória da Policia se torna obrigatório a apreensão.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO apreender itens antes do término da ação.</p>
+                <p style="color: var(--red);">🚫 PROIBIDO marcar drop.</p>
+                <p>Obs: Nas ações que não há necessidade de negociação é prioridade do ilegal decidir se quer ou não negociar.</p>
+            </div>
+            <div class="card">
+                <h3>💰 Recompensa:</h3>
+                <p>Ilegal: R$ 3.000.000 (SUJO).</p>
+                <p>Policia: R$ 2.100.000 (LIMPO).</p>
+            </div>
+            <div class="card">
+                <img src="https://i.postimg.cc/kMvzWGXg/OBSERVATORIO.png" class="action-img">
+            </div>
+        </div>
+    </div>
+
+    <div id="dominacao" class="tab-content">
+        <h1>DOMINAÇÃO</h1>
+        <div class="submenu">
+            <a onclick="openSubTab('dom-armas')" id="sublink-dom-armas">ARMAS</a>
+            <a onclick="openSubTab('dom-municao')" id="sublink-dom-municao">MUNIÇÃO</a>
+            <a onclick="openSubTab('dom-trafico')" id="sublink-dom-trafico">TRÁFICO</a>
+            <a onclick="openSubTab('dom-guerra')" id="sublink-dom-guerra">GUERRA</a>
+            <a onclick="openSubTab('dom-br')" id="sublink-dom-br">BATTLE ROYALE</a>
+        </div>
+
+        <div id="dom-armas" class="subtab-content">
+                        <div class="card">
+                <h3>🔫 Dominação de Armas</h3>
+                <p style="color: var(--green);">✅ Permitido teto e chão.</p>
+                <p style="color: var(--green);">✅ Permitido o uso de adrenalina em aliados.</p>
+                <p style="color: var(--green);">✅ Permitido heli.</p>
+                <p style="color: var(--green);">✅ Permitido 15 minutos de trocação após dominado.</p>
+                <p style="color: var(--green);">✅ Permitido capacetes, máscaras e óculos.</p>
+                <p style="color: var(--green);">✅ Permitido voltar quantas vezes quiser em quanto estiver ocorrendo a dominação(vermelho).</p>
+                <p style="color: var(--red);">🚫 Proibido marcar entrada.</p>
+                <p style="color: var(--red);">🚫 Proibido atirar antes de puxar a dominação.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip sair do galpão.</p>
+                <p style="color: var(--red);">🚫 Proibido entrar no dominas sem arma.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip entrar em qualquer veículo.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip entrar na água.</p>
+                <p style="color: var(--red);">🚫 Proibido entrar na zona após dominado.</p>
+                <p style="color: var(--red);">🚫 Proibido a facção que dominou a ultima dominação estar próximo da dominação seguinte antes de alguma facção puxar o blip.</p>
+            </div>
+                        <div class="card">
+                <h3>🔫 Como irá funcionar:</h3>
+                <p>O tempo de morte dentro da dominação é de 60 segundos.</p>
+                <p>Quem atingir 3500 pontos primeiro vence a dominação.</p>
+                <p>Se ao completar 40 minutos de dominação e ninguem tiver atingido os 3500 pontos, vence a facção com maior pontuação.</p>
+            </div>
+                        <div class="card">
+                <h3>🔫 Pontuações:</h3>
+                <p>✅ A facção que possuir o blip soma 500 pontos, se o blip for morto os pontos são transferidos junto com o blip.</p>
+                <p>✅ Cada facção presente na polyzone soma 15 pontos a cada 1 minuto.</p>
+                <p>✅ Cargos Novato, Membro, Recrutador, Gerente, Sublider e Lider:</p>
+                <p style="color: var(--green);">matar novato, membro ou recrutador = 2 pontos.</p>
+                <p style="color: var(--green);">matar gerente, sublider ou lider = 3 pontos.</p>
+                <p style="color: var(--green);">matar elite ou gerente elite = 5 pontos.</p>
+                <p>✅ Cargos Elite e Gerente Elite: </p>
+                <p style="color: var(--green);">matar novato, membro ou recrutador = 4 pontos.</p>
+                <p style="color: var(--green);">matar gerente, sublider ou lider = 6 pontos.</p>
+                <p style="color: var(--green);">matar elite ou gerente elite = 10 pontos.</p>
+            </div>
+                        <div class="card">
+                <img src="https://i.postimg.cc/QtMcFf67/DOMINACAO_ARMA.png" alt="Dom Armas" class="action-img">
+            </div>
+        </div>
+        <div id="dom-municao" class="subtab-content">
+                        <div class="card">
+                <h3>📦 Dominação de Munição</h3>
+                <p style="color: var(--green);">✅ Permitido teto e chão.</p>
+                <p style="color: var(--green);">✅ Permitido o uso de adrenalina em aliados.</p>
+                <p style="color: var(--green);">✅ Permitido heli.</p>
+                <p style="color: var(--green);">✅ Permitido 15 minutos de trocação após dominado.</p>
+                <p style="color: var(--green);">✅ Permitido capacetes, máscaras e óculos.</p>
+                <p style="color: var(--green);">✅ Permitido voltar quantas vezes quiser em quanto estiver ocorrendo a dominação(vermelho).</p>
+                <p style="color: var(--red);">🚫 Proibido marcar entrada.</p>
+                <p style="color: var(--red);">🚫 Proibido atirar antes de puxar a dominação.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip sair do galpão.</p>
+                <p style="color: var(--red);">🚫 Proibido entrar no dominas sem arma.</p>
+                <p style="color: var(--red);">🚫 Proibido entrar na zona após dominado.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip entrar em qualquer tipo de veiculo.</p>
+                <p style="color: var(--red);">🚫 Proibido a facção que dominou a ultima dominação estar próximo da dominação seguinte antes de alguma facção puxar.</p>
+            </div>
+                        <div class="card">
+                <h3>📦 Como irá funcionar:</h3>
+                <p>O tempo de morte dentro da dominação é de 60 segundos.</p>
+                <p>Quem atingir 3500 pontos primeiro vence a dominação.</p>
+                <p>Se ao completar 40 minutos de dominação e ninguem tiver atingido os 3500 pontos, vence a facção com maior pontuação.</p>
+            </div>
+                        <div class="card">
+                <h3>📦 Pontuações:</h3>
+                <p>✅ A facção que possuir o blip soma 500 pontos, se o blip for morto os pontos são transferidos junto com o blip.</p>
+                <p>✅ Cada facção presente na polyzone soma 15 pontos a cada 1 minuto.</p>
+                <p>✅ Cargos Novato, Membro, Recrutador, Gerente, Sublider e Lider:</p>
+                <p style="color: var(--green);">matar novato, membro ou recrutador = 2 pontos.</p>
+                <p style="color: var(--green);">matar gerente, sublider ou lider = 3 pontos.</p>
+                <p style="color: var(--green);">matar elite ou gerente elite = 5 pontos.</p>
+                <p>✅ Cargos Elite e Gerente Elite: </p>
+                <p style="color: var(--green);">matar novato, membro ou recrutador = 4 pontos.</p>
+                <p style="color: var(--green);">matar gerente, sublider ou lider = 6 pontos.</p>
+                <p style="color: var(--green);">matar elite ou gerente elite = 10 pontos.</p>
+            </div>
+                        <div class="card">
+                <img src="https://i.postimg.cc/xCdLX6sM/DOMINACAO_MUNICAO.png" alt="Dom Munição" class="action-img">
+            </div>
+        </div>
+        <div id="dom-trafico" class="subtab-content">
+                        <div class="card">
+                <h3>🌿 Dominação de Tráfico</h3>
+                <p style="color: var(--green);">✅ Permitido o uso de adrenalina em aliados.</p>
+                <p style="color: var(--green);">✅ Permitido heli.</p>
+                <p style="color: var(--green);">✅ Permitido 15 minutos de trocação após dominado.</p>
+                <p style="color: var(--green);">✅ Permitido capacetes, máscaras e óculos.</p>
+                <p style="color: var(--green);">✅ Permitido voltar quantas vezes quiser em quanto estiver ocorrendo a dominação(vermelho).</p>
+                <p style="color: var(--red);">🚫 Proibido marcar entrada.</p>
+                <p style="color: var(--red);">🚫 Proibido atirar antes de puxar a dominação.</p>
+                <p style="color: var(--red);">🚫 Proibido entrar no dominas sem arma.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip sair do barco.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip entrar em qualquer tipo de veiculo.</p>
+                <p style="color: var(--red);">🚫 Proibido o blip entrar na água.</p>
+                <p style="color: var(--red);">🚫 Proibido entrar na zona após dominado.</p>
+                <p style="color: var(--red);">🚫 Proibido a facção que dominou a ultima dominação estar próximo da dominação seguinte antes de alguma facção puxar.</p>
+            </div>
+                        <div class="card">
+                <h3>🌿 Como irá funcionar:</h3>
+                <p>O tempo de morte dentro da dominação é de 60 segundos.</p>
+                <p>Quem atingir 3500 pontos primeiro vence a dominação.</p>
+                <p>Se ao completar 40 minutos de dominação e ninguem tiver atingido os 3500 pontos, vence a facção com maior pontuação.</p>
+            </div>
+                        <div class="card">
+                <h3>🌿 Pontuações:</h3>
+                <p>✅ A facção que possuir o blip soma 500 pontos, se o blip for morto os pontos são transferidos junto com o blip.</p>
+                <p>✅ Cada facção presente na polyzone soma 15 pontos a cada 1 minuto.</p>
+                <p>✅ Cargos Novato, Membro, Recrutador, Gerente, Sublider e Lider:</p>
+                <p style="color: var(--green);">matar novato, membro ou recrutador = 2 pontos.</p>
+                <p style="color: var(--green);">matar gerente, sublider ou lider = 3 pontos.</p>
+                <p style="color: var(--green);">matar elite ou gerente elite = 5 pontos.</p>
+                <p>✅ Cargos Elite e Gerente Elite: </p>
+                <p style="color: var(--green);">matar novato, membro ou recrutador = 4 pontos.</p>
+                <p style="color: var(--green);">matar gerente, sublider ou lider = 6 pontos.</p>
+                <p style="color: var(--green);">matar elite ou gerente elite = 10 pontos.</p>
+            </div>
+                        <div class="card">
+                <img src="https://i.postimg.cc/QMvT0chH/Gemini-Generated-Image-usr12susr12susr1.png" alt="Dom Tráfico" class="action-img">
+            </div>
+        </div>
+    </div>
+
+    <div id="precos" class="tab-content">
+        <h1>VALORES</h1>
+        <div class="submenu">
+            <a onclick="openSubTab('precos-ilegal')" id="sublink-precos-ilegal">ILEGAL</a>
+            <a onclick="openSubTab('precos-hospital')" id="sublink-precos-hospital">HOSPITAL</a>
+            <a onclick="openSubTab('precos-bombeiro')" id="sublink-precos-bombeiro">BOMBEIRO</a>
+            <a onclick="openSubTab('precos-mecanica')" id="sublink-precos-mecanica">MECÂNICA</a>
+            <a onclick="openSubTab('precos-judiciario')" id="sublink-precos-judiciario">JUDICIÁRIO</a>
+            <a onclick="openSubTab('precos-kids')" id="sublink-precos-kids">KIDS</a>
+        </div>
+
+        <div id="precos-ilegal" class="subtab-content">
+            <div class="submenu">
+                <a onclick="openSubSubTab('armas')" id="subsublink-armas">ARMAS</a>
+                <a onclick="openSubSubTab('municao')" id="subsublink-municao">MUNIÇÃO</a>
+                <a onclick="openSubSubTab('trafico')" id="subsublink-trafico">TRÁFICO</a>
+            </div>
+
+            <div id="armas" class="subsubtab-content">
+                <h3>🔫 Armas</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="150000" data-sem="175000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Five</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 150.000</td>
+                            <td>R$ 175.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="200000" data-sem="225000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Tec-9</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 200.000</td>
+                            <td>R$ 225.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="300000" data-sem="325000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Aug</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 300.000</td>
+                            <td>R$ 325.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="350000" data-sem="375000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Ak mk2</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 350.000</td>
+                            <td>R$ 375.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="450000" data-sem="500000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Ar-15</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 450.000</td>
+                            <td>R$ 500.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="550000" data-sem="650000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>G-36</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 550.000</td>
+                            <td>R$ 650.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <div id="municao" class="subsubtab-content">
+                <h3>📦 Munição</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="1000" data-sem="1500">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Munição de Pistola</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 1.000</td>
+                            <td>R$ 1.500</td>
+                        </tr>
+                            <tr class="item-row" data-com="2000" data-sem="2500">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Munição de Sub</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 2.500</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="4000" data-sem="4500">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Munição de Fuzil</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 4.000</td>
+                            <td>R$ 4.500</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="120000" data-sem="150000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Colete</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 120.000</td>
+                            <td>R$ 150.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="200000" data-sem="250000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Colete Premium</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 200.000</td>
+                            <td>R$ 250.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="trafico" class="subsubtab-content">
+                <h3>🌿 Tráfico</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Maconha</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Cocaína</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Ecstasy</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Cristal Azul</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Lsd</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Ópio</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Heroína</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="2000" data-sem="3000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Skunk</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000</td>
+                            <td>R$ 3.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="8000" data-sem="12000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Coquetel</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 8.000</td>
+                            <td>R$ 12.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="40000" data-sem="50000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>C4</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 40.000</td>
+                            <td>R$ 50.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="60000" data-sem="70000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Lockpick</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 60.000</td>
+                            <td>R$ 70.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="1200000" data-sem="1500000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Masterpick</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 1.200.000</td>
+                            <td>R$ 1.500.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="100000" data-sem="120000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Mochila X</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 100.000</td>
+                            <td>R$ 120.000</td>
+                        </tr>
+                        <tr class="item-row" data-com="00.25" data-sem="00.4">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Desmanche</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 25%</td>
+                            <td>R$ 40%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="precos-hospital" class="subtab-content">
+            <h3>🏥 Serviços Médicos</h3>
+            <img src="https://i.postimg.cc/FKbH01Dj/hp.png" alt="Hospital" class="action-img">
+            <table>
+                <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                <tbody>
+                    <tr class="item-row" data-com="10000" data-sem="20000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Kit Médico</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 10.000</td>
+                        <td>R$ 20.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="30000" data-sem="40000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Bandagem</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 30.000</td>
+                        <td>R$ 40.000</td>
+                    <tr class="item-row" data-com="130000" data-sem="150000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Elixir Vital</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 130.000</td>
+                        <td>R$ 150.000</td>
+                    </tr>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="precos-bombeiro" class="subtab-content">
+            <h3>🧯 Serviços de Bombeiro</h3>
+            <img src="https://i.postimg.cc/nLKhqM0K/cbm.png" alt="Bombeiro" class="action-img">
+            <table>
+                <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                <tbody>
+                        <tr class="item-row" data-com="30000" data-sem="40000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Bandagem</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 30.000</td>
+                        <td>R$ 40.000</td>
+                                            <tr class="item-row" data-com="130000" data-sem="150000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Adrenalina</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 130.000</td>
+                        <td>R$ 150.000</td>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="precos-mecanica" class="subtab-content">
+            <div class="submenu">
+                <a onclick="openSubSubTab('servico')" id="subsublink-trafico">SERVIÇO & ITENS</a>
+                <a onclick="openSubSubTab('personalizacao')" id="subsublink-personalizacao">PERSONALIZAÇÃO</a>
+                <a onclick="openSubSubTab('suspensao')" id="subsublink-suspensao">SUSPENSÃO</a>
+                <a onclick="openSubSubTab('motor')" id="subsublink-trafico">MOTOR</a>
+                <a onclick="openSubSubTab('transmissao')" id="subsublink-trafico">TRANSMISSÃO</a>
+                <a onclick="openSubSubTab('freio')" id="subsublink-trafico">FREIO</a>
+                <a onclick="openSubSubTab('blindagem')" id="subsublink-trafico">BLINDAGEM LATARIA</a>
+                <a onclick="openSubSubTab('turbo')" id="subsublink-trafico">TURBO</a>
+            </div>
+
+            <div id="personalizacao" class="subsubtab-content">
+                <h3>🛠️ PERSONALIZAÇÃO</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                    <img src="https://i.postimg.cc/y8VQ7b2q/mec.png" alt="Mecanica" class="action-img">
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Aerofólio</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Pára-choque dianteiro</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Pára-choque traseiro</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Saias</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Escapamento</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Capô</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Gaiola</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Teto</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Paralama</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Pintura</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Pneus</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Buzina</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Capa de farol</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Chassi/Portas</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Adesivo</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Painel</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Ponteiros</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Janela</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Banco</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Adesivo Atomic</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="suspensao" class="subsubtab-content">
+                <h3>🛠️ SUSPENSÃO</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="90000" data-sem="90000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 1</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 90.000</td>
+                            <td>R$ 90.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="100000" data-sem="100000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 2</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 100.000</td>
+                            <td>R$ 100.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="110000" data-sem="110000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 3</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 110.000</td>
+                            <td>R$ 110.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="130000" data-sem="130000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 4</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 130.000</td>
+                            <td>R$ 130.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="motor" class="subsubtab-content">
+                <h3>🛠️ MOTOR</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="90000" data-sem="90000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 1</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 90.000</td>
+                            <td>R$ 90.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="100000" data-sem="100000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 2</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 100.000</td>
+                            <td>R$ 100.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="110000" data-sem="110000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 3</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 110.000</td>
+                            <td>R$ 110.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="130000" data-sem="130000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 4</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 130.000</td>
+                            <td>R$ 130.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="transmissao" class="subsubtab-content">
+                <h3>🛠️ TRANSMISSÃO</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="90000" data-sem="90000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 1</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 90.000</td>
+                            <td>R$ 90.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="100000" data-sem="100000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 2</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 100.000</td>
+                            <td>R$ 100.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="110000" data-sem="110000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 3</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 110.000</td>
+                            <td>R$ 110.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="120000" data-sem="120000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 4</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 120.000</td>
+                            <td>R$ 120.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="freio" class="subsubtab-content">
+                <h3>🛠️ FREIO</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="80000" data-sem="80000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 1</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 80.000</td>
+                            <td>R$ 80.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="100000" data-sem="100000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 2</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 100.000</td>
+                            <td>R$ 100.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="110000" data-sem="110000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 3</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 110.000</td>
+                            <td>R$ 110.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="120000" data-sem="120000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 4</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 120.000</td>
+                            <td>R$ 120.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="blindagem" class="subsubtab-content">
+                <h3>🛠️ BLINDAGEM LATARIA</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="1000000" data-sem="1000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 1</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 1.000.000</td>
+                            <td>R$ 1.000.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="2000000" data-sem="2000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 2</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 2.000.000</td>
+                            <td>R$ 2.000.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="3000000" data-sem="3000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 3</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 3.000.000</td>
+                            <td>R$ 3.000.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="4000000" data-sem="4000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 4</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 4.000.000</td>
+                            <td>R$ 4.000.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="5000000" data-sem="5000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Nivel 5</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 5.000.000</td>
+                            <td>R$ 5.000.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="turbo" class="subsubtab-content">
+                <h3>🛠️ TURBO</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="1500000" data-sem="1500000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Kit Nitro</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 1.500.000</td>
+                            <td>R$ 1.500.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="servico" class="subsubtab-content">
+                <h3>🛠️ SERVIÇO & ITENS</h3>
+                <table>
+                    <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                    <tbody>
+                        <tr class="item-row" data-com="20000" data-sem="20000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Reparar Motor</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 20.000</td>
+                            <td>R$ 20.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="2000" data-sem="2500">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Kit Reparo</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 20.000</td>
+                            <td>R$ 25.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="500000" data-sem="550000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Garrafa Nitro</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 500.000</td>
+                            <td>R$ 550.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="1500000" data-sem="2000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Baú 500kg</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 1.500.000</td>
+                            <td>R$ 2.000.000</td>
+                        </tr>
+                            <tr class="item-row" data-com="3000000" data-sem="4000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Baú 1000kg</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 3.000.000</td>
+                            <td>R$ 4.000.000</td>
+                        </tr>
+                        </tr>
+                            <tr class="item-row" data-com="5000000" data-sem="6000000">
+                            <td><input type="checkbox" class="sel"></td>
+                            <td><strong>Baú 1500kg</strong></td>
+                            <td><input type="number" class="qtd" value="1" min="1"></td>
+                            <td>R$ 5.000.000</td>
+                            <td>R$ 6.000.000</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="precos-judiciario" class="subtab-content">
+            <h3>⚖️ Judiciário</h3>
+            <img src="https://i.postimg.cc/Lsk8jhN3/jud.png" alt="Judiciario" class="action-img">
+            <table>
+                <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                <tbody>
+                    <tr class="item-row" data-com="50000" data-sem="50000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Advogado</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 50.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="50000" data-sem="300000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Redução de Pena ou Liberdade</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 50.000</td>
+                        <td>R$ 300.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="1500000" data-sem="2000000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Adoção</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 1.500.000</td>
+                        <td>R$ 2.000.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="2500000" data-sem="3000000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Casamento</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 2.500.000</td>
+                        <td>R$ 3.000.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="4500000" data-sem="5000000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Divórcio</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 4.500.000</td>
+                        <td>R$ 5.000.000</td>
+                    </tr>
+                    <tr class="item-row" data-com="8000000" data-sem="10000000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Alteração de Nome</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 8.000.000</td>
+                        <td>R$ 10.000.000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="precos-kids" class="subtab-content">
+            <h3>🍼 Kids</h3>
+            <table>
+                <thead><tr><th></th><th>Item</th><th>Qtd</th><th>Mínimo</th><th>Máximo</th></tr></thead>
+                <tbody>
+                    <tr class="item-row" data-com="100000" data-sem="120000">
+                        <td><input type="checkbox" class="sel"></td>
+                        <td><strong>Mamadeira</strong></td>
+                        <td><input type="number" class="qtd" value="1" min="1"></td>
+                        <td>R$ 100.000</td>
+                        <td>R$ 120.000</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="calculator-footer" id="calcFooter" style="display: none;">
+            <div class="calc-row"><span class="calc-label">Total Mínimo:</span><span id="resTotalCom">R$ 0,00</span></div>
+            <div class="calc-row"><span class="calc-label">Total Máximo:</span><span id="resTotalSem">R$ 0,00</span></div>
+        </div>
+    </div>
+
+    <div id="punicoes" class="tab-content">
+        <h1>SANCIONÁRIO</h1>
+        <div class="card">
+            <h3>Abuso de Bug</h3>
+            <p style="color: var(--red);">Analise, + Punição</p>
+        </div>
+        <div class="card">
+            <h3>Anti-amor à vida</h3>
+            <p style="color: var(--red);">10h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Anti-roleplay (quebra de RP / imersão)</h3>
+            <p style="color: var(--red);">10h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Combat Login (CL)</h3>
+            <p style="color: var(--red);">10h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Flaming</h3>
+            <p style="color: var(--red);">5h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Forçar RP</h3>
+            <p style="color: var(--red);">5h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Interferência em ação</h3>
+            <p style="color: var(--red);">5h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Lembrar de ação</h3>
+            <p style="color: var(--red);">10h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Metagaming</h3>
+            <p style="color: var(--red);">10h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Powergaming</h3>
+            <p style="color: var(--red);">5h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Quebra de regras em ação</h3>
+            <p style="color: var(--red);">5h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Random Death Match (RDM)</h3>
+            <p style="color: var(--red);">10h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Voltar pra ação</h3>
+            <p style="color: var(--red);">10h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>Trash RP</h3>
+            <p style="color: var(--red);">5h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>vehicle Death Match (VDM)</h3>
+            <p style="color: var(--red);">5h de reclusão no manicômio</p>
+        </div>
+        <div class="card">
+            <h3>DARK LEVE</h3>
+            <p> preconceito social, linguistico, machismo, feminismo, gordofobia, capacitismo </p>
+            <p style="color: var(--red);">2 dias de banimento</p>
+        </div>
+        <div class="card">
+            <h3>DARK MÉDIO</h3>
+            <p> xenofobia, transfobia, homofobia, intolerância religiosa </p>
+            <p style="color: var(--red);">5 dias de banimento</p>
+        </div>
+        <div class="card">
+            <h3>DARK EXTREMO</h3>
+            <p> preconceito racial + discurso de ódio, genocídio </p>
+            <p style="color: var(--red);">Banimento + Perda da WL</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Função principal de navegação (Abas principais)
+    function handleRouting() {
+        let hash = window.location.hash || '#inicio';
+        let mainTabId = hash.split('-')[0].replace('#', '');
+        
+        // 1. Limpar e Ativar Aba Principal
+        document.querySelectorAll(".tab-content").forEach(tab => tab.classList.remove("active"));
+        document.querySelectorAll("nav a").forEach(link => link.classList.remove("active"));
+
+        const targetTab = document.getElementById(mainTabId);
+        if (targetTab) {
+            targetTab.classList.add("active");
+            const navLink = document.querySelector(`nav a[href="#${mainTabId}"]`);
+            if (navLink) navLink.classList.add("active");
+
+            // 2. Ativar automaticamente a primeira sub-aba se nenhuma estiver selecionada
+            const firstSubLink = targetTab.querySelector(".submenu a");
+            const activeSub = targetTab.querySelector(".subtab-content.active");
+            
+            if (firstSubLink && !activeSub) {
+                firstSubLink.click();
+            }
+        }
+        
+        // Controlar visibilidade do rodapé da calculadora
+        document.getElementById('calcFooter').style.display = (mainTabId === 'precos') ? 'block' : 'none';
+        calcular();
+    }
+
+    // Função para Sub-abas (Ex: Regras > Gerais, Preços > Ilegal)
+    function openSubTab(subTabId) {
+        const targetContent = document.getElementById(subTabId);
+        if (!targetContent) return;
+
+        // Acha o container pai (tab-content) para limpar apenas os "irmãos"
+        const parentTab = targetContent.closest('.tab-content');
+        
+        // Remove active de todas as sub-abas e links deste menu
+        parentTab.querySelectorAll(".subtab-content").forEach(content => content.classList.remove("active"));
+        parentTab.querySelectorAll(".submenu:first-of-type a").forEach(link => link.classList.remove("active"));
+
+        // Ativa a selecionada
+        targetContent.classList.add("active");
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add("active");
+        }
+
+        // 3. Se houver um sub-sub-menu (como no Ilegal), ativa o primeiro item
+        const firstSubSub = targetContent.querySelector(".submenu a");
+        if (firstSubSub) {
+            firstSubSub.click();
+        }
+
+        calcular();
+    }
+
+    // Função para Sub-sub-abas (Ex: Ilegal > Armas)
+    function openSubSubTab(subSubTabId) {
+        const targetContent = document.getElementById(subSubTabId);
+        if (!targetContent) return;
+
+        const parentSubTab = targetContent.closest('.subtab-content');
+
+        // Limpa sub-sub-abas irmãs
+        parentSubTab.querySelectorAll(".subsubtab-content").forEach(content => content.classList.remove("active"));
+        parentSubTab.querySelectorAll(".submenu a").forEach(link => link.classList.remove("active"));
+
+        // Ativa a selecionada
+        targetContent.classList.add("active");
+        if (event && event.currentTarget) {
+            event.currentTarget.classList.add("active");
+        }
+
+        calcular();
+    }
+
+    // Cálculo da calculadora
+    function calcular() {
+        let totalCom = 0, totalSem = 0;
+        // Soma apenas itens dentro de elementos que tenham a classe .active
+        document.querySelectorAll('.tab-content.active .item-row, .subtab-content.active .item-row, .subsubtab-content.active .item-row').forEach(row => {
+            // Verifica se a linha pertence ao nível mais profundo ativo para não duplicar somas
+            if (row.closest('.active') && row.querySelector('.sel').checked) {
+                let q = parseInt(row.querySelector('.qtd').value) || 0;
+                totalCom += q * parseFloat(row.dataset.com);
+                totalSem += q * parseFloat(row.dataset.sem);
+            }
+        });
+        
+        document.getElementById('resTotalCom').innerText = totalCom.toLocaleString('pt-br', {style: 'currency', currency: 'BRL'});
+        document.getElementById('resTotalSem').innerText = totalSem.toLocaleString('pt-br', {style: 'currency', currency: 'BRL'});
+    }
+
+    // Eventos
+    window.addEventListener('hashchange', handleRouting);
+    document.addEventListener('input', function(e) {
+        if(e.target.classList.contains('sel') || e.target.classList.contains('qtd')) calcular();
+    });
+    
+    // Inicialização forçada
+    window.addEventListener('load', () => {
+        if(!window.location.hash) window.location.hash = '#inicio';
+        handleRouting();
+    });
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
