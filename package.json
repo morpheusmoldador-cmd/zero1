@@ -1,155 +1,20 @@
-const crypto = require("crypto");
-const fs = require("fs");
-const path = require("path");
-const { isApprovedAdmin, getRequest, pendingCount } = require("./staff");
-
-const OWNER_ID = process.env.OWNER_ID || "1228740417839824968";
-
-function extraAdminIds() {
-  return (process.env.ADMIN_IDS || "")
-    .split(",")
-    .map((id) => id.trim())
-    .filter(Boolean);
-}
-
-function isOwner(userId) {
-  return Boolean(userId) && String(userId) === String(OWNER_ID);
-}
-
-function isAdmin(userId) {
-  if (!userId) return false;
-  const id = String(userId);
-  return isOwner(id) || extraAdminIds().includes(id) || isApprovedAdmin(id);
-}
-
-function avatarUrl(user) {
-  if (!user) return "";
-  if (String(user.avatar || "").startsWith("http")) return user.avatar;
-  if (user.avatar) {
-    return `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`;
+{
+  "name": "zer01-roleplay-site",
+  "version": "1.0.0",
+  "description": "Portal oficial ZER01 Roleplay com editor visual e login Discord",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "pack": "node scripts/pack-squarecloud.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cookie-session": "^2.1.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^2.2.0"
   }
-  return "https://cdn.discordapp.com/embed/avatars/0.png";
 }
-
-function publicUrl(req) {
-  if (process.env.PUBLIC_URL) return process.env.PUBLIC_URL.replace(/\/$/, "");
-  if (req) {
-    const proto = (req.headers["x-forwarded-proto"] || req.protocol || "https").split(",")[0].trim();
-    const host = (req.headers["x-forwarded-host"] || req.get("host") || "").split(",")[0].trim();
-    if (host) return `${proto}://${host}`;
-  }
-  return "https://zer01roleplay.livroderegras.app";
-}
-
-function redirectUri(req) {
-  return `${publicUrl(req)}/auth/discord/callback`;
-}
-
-function sessionSecret() {
-  if (process.env.SESSION_SECRET && process.env.SESSION_SECRET !== "troque-por-uma-frase-longa-e-aleatoria") {
-    return process.env.SESSION_SECRET;
-  }
-  const file = path.join(__dirname, "..", "data", ".session-secret");
-  try {
-    if (fs.existsSync(file)) return fs.readFileSync(file, "utf8").trim();
-  } catch {
-    /* ignore */
-  }
-  const secret = crypto.randomBytes(32).toString("hex");
-  fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, secret, "utf8");
-  return secret;
-}
-
-function discordAuthUrl(state, req) {
-  const params = new URLSearchParams({
-    client_id: process.env.DISCORD_CLIENT_ID || "",
-    redirect_uri: redirectUri(req),
-    response_type: "code",
-    scope: "identify",
-    prompt: "consent",
-    state,
-  });
-  return `https://discord.com/api/oauth2/authorize?${params.toString()}`;
-}
-
-async function exchangeCode(code, req) {
-  const body = new URLSearchParams({
-    client_id: process.env.DISCORD_CLIENT_ID || "",
-    client_secret: process.env.DISCORD_CLIENT_SECRET || "",
-    grant_type: "authorization_code",
-    code,
-    redirect_uri: redirectUri(req),
-  });
-
-  const tokenRes = await fetch("https://discord.com/api/oauth2/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body,
-  });
-  if (!tokenRes.ok) {
-    const text = await tokenRes.text();
-    throw new Error(`Falha no token Discord: ${tokenRes.status} ${text}`);
-  }
-  const token = await tokenRes.json();
-
-  const userRes = await fetch("https://discord.com/api/users/@me", {
-    headers: { Authorization: `Bearer ${token.access_token}` },
-  });
-  if (!userRes.ok) {
-    throw new Error("Falha ao ler o usuário Discord");
-  }
-  return userRes.json();
-}
-
-function toPublicUser(discordUser) {
-  if (!discordUser) return { loggedIn: false, canEdit: false, isOwner: false };
-  const request = getRequest(discordUser.id);
-  return {
-    loggedIn: true,
-    canEdit: isAdmin(discordUser.id),
-    id: discordUser.id,
-    username: discordUser.global_name || discordUser.username,
-    avatar: avatarUrl(discordUser),
-    isOwner: isOwner(discordUser.id),
-    requestStatus: isAdmin(discordUser.id) ? "admin" : (request && request.status) || "none",
-    pendingCount: isOwner(discordUser.id) ? pendingCount() : 0,
-  };
-}
-
-function requireLogin(req, res, next) {
-  if (!req.session?.user) {
-    return res.status(401).json({ error: "Faça login com o Discord." });
-  }
-  next();
-}
-
-function requireAdmin(req, res, next) {
-  if (!req.session?.user || !isAdmin(req.session.user.id)) {
-    return res.status(403).json({ error: "Somente o dono/admin pode editar." });
-  }
-  next();
-}
-
-function requireOwner(req, res, next) {
-  if (!req.session?.user || !isOwner(req.session.user.id)) {
-    return res.status(403).json({ error: "Somente o dono pode gerenciar cadastros." });
-  }
-  next();
-}
-
-module.exports = {
-  OWNER_ID,
-  isOwner,
-  isAdmin,
-  avatarUrl,
-  publicUrl,
-  redirectUri,
-  sessionSecret,
-  discordAuthUrl,
-  exchangeCode,
-  toPublicUser,
-  requireLogin,
-  requireAdmin,
-  requireOwner,
-};

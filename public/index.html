@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZER01 Roleplay | Portal Oficial</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <div id="admin-bar" data-login-button="1"></div>
+    <div id="site-root"></div>
+    <div id="toast"></div>
+    <div id="staff-panel" class="staff-panel" hidden>
+        <div class="staff-panel-inner">
+            <div class="staff-panel-head">
+                <h3>Cadastros de admin</h3>
+                <button class="btn btn-ghost" type="button" id="staff-close">Fechar</button>
+            </div>
+            <p class="staff-hint">Quem pede acesso aparece aqui. Aceite para liberar o botão Editar, ou recuse.</p>
+            <h4>Pedidos pendentes</h4>
+            <div id="staff-pending"></div>
+            <h4>Admins aprovados</h4>
+            <div id="staff-admins"></div>
+            <h4>Recusados</h4>
+            <div id="staff-refused"></div>
+        </div>
+    </div>
+    <div id="login-panel" class="staff-panel" hidden>
+        <div class="staff-panel-inner">
+            <div class="staff-panel-head">
+                <h3>Entrar</h3>
+                <button class="btn btn-ghost" type="button" id="login-close">Fechar</button>
+            </div>
+            <p class="staff-hint">Digite seu e-mail para acessar o painel de admin.</p>
+            <form id="login-form">
+                <label for="login-email">E-mail</label>
+                <input id="login-email" name="email" type="email" autocomplete="username" required placeholder="seu@email.com">
+                <p id="login-error" class="login-error" hidden></p>
+                <div class="modal-actions">
+                    <button class="btn" type="submit">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div class="modal-backdrop" id="modal">
+        <div class="modal">
+            <h3 id="modal-title">Editar</h3>
+            <div id="modal-fields"></div>
+            <div class="modal-actions">
+                <button class="btn btn-ghost" type="button" id="modal-cancel">Fechar</button>
+                <button class="btn" type="button" id="modal-ok">Aplicar</button>
+            </div>
+        </div>
+    </div>
+    <input type="file" id="file-input" accept="image/png,image/jpeg,image/webp,image/gif,.png" hidden>
+    <script src="/js/site.js"></script>
+    <script src="/js/editor.js"></script>
+    <script src="/js/app.js"></script>
+</body>
+</html>

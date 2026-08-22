@@ -1,40 +1,16 @@
-const fs = require("fs");
-const path = require("path");
-const session = require("express-session");
+# Portal ZER01 Roleplay
 
-class FileSessionStore extends session.Store {
-  constructor(dir) {
-    super();
-    this.dir = dir;
-    fs.mkdirSync(dir, { recursive: true });
-  }
+Site oficial hospedado na **Square Cloud**. Não precisa deixar o PC ligado.
 
-  fileOf(sid) {
-    const safe = String(sid || "").replace(/[^a-zA-Z0-9._-]/g, "");
-    return path.join(this.dir, `${safe}.json`);
-  }
+- Login por e-mail (dono: `morpheus.moldador@gmail.com`)
+- Pedidos de admin para aceitar/recusar
+- Editor visual no próprio site (Enter cria linha nova)
+- Painel de admin na lateral
+- Botão **LOJA VIP** com link colado por você
+- Reinício automático se o processo cair
 
-  get(sid, cb) {
-    fs.readFile(this.fileOf(sid), "utf8", (err, data) => {
-      if (err) return cb(null, null);
-      try {
-        cb(null, JSON.parse(data));
-      } catch {
-        cb(null, null);
-      }
-    });
-  }
+Envio (oficial): `npm run pack` → `zer01regras.zip` → painel Square Cloud.
 
-  set(sid, sess, cb) {
-    fs.writeFile(this.fileOf(sid), JSON.stringify(sess), "utf8", (err) => cb(err));
-  }
+Teste rápido na Vercel: [VERCEL.md](VERCEL.md)
 
-  destroy(sid, cb) {
-    fs.unlink(this.fileOf(sid), (err) => {
-      if (err && err.code !== "ENOENT") return cb(err);
-      cb(null);
-    });
-  }
-}
-
-module.exports = { FileSessionStore };
+Passo a passo Square Cloud: [SETUP.md](SETUP.md)

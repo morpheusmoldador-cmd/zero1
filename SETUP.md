@@ -1,126 +1,42 @@
-const fs = require("fs");
-const path = require("path");
+# Hospedar o portal ZER01 na Square Cloud
 
-const DATA_DIR = path.join(__dirname, "..", "data");
-const SITE_PATH = path.join(DATA_DIR, "site.json");
-const ORIGINAL_PATH = path.join(DATA_DIR, "original.html");
-const UPLOADS_DIR = path.join(DATA_DIR, "uploads");
+O site **não depende do seu computador**. Depois do upload, ele fica no ar 24h na Square Cloud. Se o processo cair, a Square Cloud sobe de novo (`AUTORESTART=true`).
 
-const MISSING_DOMINATION = `
-        <div id="dom-guerra" class="subtab-content">
-            <div class="card">
-                <h3>⚔️ Guerra</h3>
-                <p>Use o modo Editar para preencher as regras de guerra.</p>
-            </div>
-        </div>
-        <div id="dom-br" class="subtab-content">
-            <div class="card">
-                <h3>👑 Battle Royale</h3>
-                <p>Use o modo Editar para preencher as regras de Battle Royale.</p>
-            </div>
-        </div>
-`
+Textos, fotos, Loja VIP, admins e login ficam salvos no servidor da Square Cloud. Você só usa o navegador para editar.
 
-function ensureDirs() {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  fs.mkdirSync(UPLOADS_DIR, { recursive: true });
-}
+Login por **e-mail**. Dono: `morpheus.moldador@gmail.com`.
 
-function extractHtml(original) {
-  const bodyMatch = original.match(/<body[^>]*>([\s\S]*?)<script>/i);
-  let html = bodyMatch ? bodyMatch[1].trim() : original;
+## 1. Enviar o zip
 
-  if (!html.includes('id="dom-guerra"')) {
-    html = html.replace(/<\/div>\s*<div id="precos"/, `${MISSING_DOMINATION}    </div>\n\n    <div id="precos"`);
-  }
+Arquivo: `zer01regras.zip`
 
-  return html;
-}
+1. Abra https://squarecloud.app
+2. Crie uma aplicação **Website / Site** (não bot)
+3. Envie o zip
+4. Confirme memória **512 MB** (mínimo de site)
 
-function extractTitle(original) {
-  const m = original.match(/<title>([\s\S]*?)<\/title>/i);
-  return (m && m[1].trim()) || "ZER01 Roleplay | Portal Oficial";
-}
+## 2. Variáveis no painel da Square Cloud
 
-function defaultSite() {
-  const original = fs.existsSync(ORIGINAL_PATH)
-    ? fs.readFileSync(ORIGINAL_PATH, "utf8")
-    : "<nav></nav><div class=\"container\"><div id=\"inicio\" class=\"tab-content active\"><h1>ZER01 ROLEPLAY</h1></div></div>";
+Não coloque isso no seu PC. Só no painel da aplicação:
 
-  return {
-    title: extractTitle(original).replace(/Zero01 Roleplay/i, "ZER01 Roleplay").replace(/Central Roleplay/i, "ZER01 Roleplay"),
-    html: extractHtml(original),
-    vipStoreUrl: "",
-    connectText: "",
-    updatedAt: new Date().toISOString(),
-  };
-}
+| Variável | Valor |
+|---|---|
+| `PUBLIC_URL` | `https://zer01roleplay.livroderegras.app` |
+| `OWNER_EMAIL` | `morpheus.moldador@gmail.com` |
+| `SESSION_SECRET` | frase longa e aleatória |
 
-function loadSite() {
-  ensureDirs();
-  if (fs.existsSync(SITE_PATH)) {
-    try {
-      const parsed = JSON.parse(fs.readFileSync(SITE_PATH, "utf8"));
-      if (parsed && typeof parsed.html === "string") return parsed;
-    } catch {
-      /* fallback to seed */
-    }
-  }
-  const site = defaultSite();
-  saveSite(site);
-  return site;
-}
+Não defina `PORT`. O site já escuta a **porta 80**.
 
-function sanitizeVipUrl(url) {
-  let raw = String(url || "").trim();
-  if (!raw) return "";
-  if (!/^https?:\/\//i.test(raw)) raw = "https://" + raw;
-  try {
-    const parsed = new URL(raw);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return "";
-    return parsed.toString();
-  } catch {
-    return "";
-  }
-}
+Pode apagar `DISCORD_CLIENT_ID` e `DISCORD_CLIENT_SECRET` se ainda estiverem lá. Não são mais usados.
 
-function sanitizeConnectText(text) {
-  return String(text || "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, 200);
-}
+## 3. Depois de online
 
-function saveSite(site) {
-  ensureDirs();
-  const current = fs.existsSync(SITE_PATH)
-    ? (() => {
-        try {
-          return JSON.parse(fs.readFileSync(SITE_PATH, "utf8"));
-        } catch {
-          return {};
-        }
-      })()
-    : {};
-  const payload = {
-    title: site.title || current.title || "ZER01 Roleplay | Portal Oficial",
-    html: site.html != null ? site.html : current.html || "",
-    vipStoreUrl: sanitizeVipUrl(site.vipStoreUrl != null ? site.vipStoreUrl : current.vipStoreUrl),
-    connectText: sanitizeConnectText(site.connectText != null ? site.connectText : current.connectText),
-    updatedAt: new Date().toISOString(),
-  };
-  const tmp = SITE_PATH + ".tmp";
-  fs.writeFileSync(tmp, JSON.stringify(payload, null, 2), "utf8");
-  fs.renameSync(tmp, SITE_PATH);
-  return payload;
-}
+- Site público: `https://zer01roleplay.livroderegras.app`
+- **Admin** (painel na direita) → entre com `morpheus.moldador@gmail.com`
+- **Editar**, **Loja VIP**, **Cadastros** — tudo no site, no ar
+- No modo Editar, **Enter** cria uma linha nova
+- Pode desligar o computador
 
-module.exports = {
-  DATA_DIR,
-  SITE_PATH,
-  UPLOADS_DIR,
-  loadSite,
-  saveSite,
-  sanitizeVipUrl,
-  ensureDirs,
-};
+## Teste na Vercel
+
+Para testar sem mexer na Square Cloud, use o guia [VERCEL.md](VERCEL.md). Edições e fotos na Vercel **não ficam permanentes**.
