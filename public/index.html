@@ -17,7 +17,7 @@
                 <h3>Cadastros de admin</h3>
                 <button class="btn btn-ghost" type="button" id="staff-close">Fechar</button>
             </div>
-            <p class="staff-hint">Quem pede acesso aparece aqui. Aceite para liberar o botão Editar, ou recuse.</p>
+            <p class="staff-hint">Quem pede acesso aparece aqui. Aceite para liberar o botão Editar, ou recuse. Ao aceitar, você pode criar uma senha provisória para a pessoa.</p>
             <h4>Pedidos pendentes</h4>
             <div id="staff-pending"></div>
             <h4>Admins aprovados</h4>
@@ -32,13 +32,41 @@
                 <h3>Entrar</h3>
                 <button class="btn btn-ghost" type="button" id="login-close">Fechar</button>
             </div>
-            <p class="staff-hint">Digite seu e-mail para acessar o painel de admin.</p>
+            <p class="staff-hint">Entre com e-mail e senha. Se ainda não tem acesso, peça pelo botão abaixo — o pedido aparece para o dono em Cadastros.</p>
             <form id="login-form">
                 <label for="login-email">E-mail</label>
                 <input id="login-email" name="email" type="email" autocomplete="username" required placeholder="seu@email.com">
+                <label for="login-password">Senha</label>
+                <input id="login-password" name="password" type="password" autocomplete="current-password" required placeholder="Mínimo 6 caracteres">
+                <label for="login-password-confirm">Confirmar senha</label>
+                <input id="login-password-confirm" name="confirm" type="password" autocomplete="new-password" placeholder="Só precisa se for pedir acesso">
                 <p id="login-error" class="login-error" hidden></p>
                 <div class="modal-actions">
+                    <button class="btn btn-ghost" type="button" id="login-request">Pedir acesso</button>
                     <button class="btn" type="submit">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <div id="account-panel" class="staff-panel" hidden>
+        <div class="staff-panel-inner">
+            <div class="staff-panel-head">
+                <h3>Minha conta</h3>
+                <button class="btn btn-ghost" type="button" id="account-close">Fechar</button>
+            </div>
+            <p class="staff-hint" id="account-hint">Altere seu e-mail ou sua senha. A senha atual é obrigatória para confirmar.</p>
+            <form id="account-form">
+                <label for="account-email">E-mail</label>
+                <input id="account-email" name="email" type="email" autocomplete="username" required>
+                <label for="account-current">Senha atual</label>
+                <input id="account-current" name="current" type="password" autocomplete="current-password" required>
+                <label for="account-password">Nova senha</label>
+                <input id="account-password" name="password" type="password" autocomplete="new-password" placeholder="Deixe em branco para não trocar">
+                <label for="account-password-confirm">Confirmar nova senha</label>
+                <input id="account-password-confirm" name="confirm" type="password" autocomplete="new-password">
+                <p id="account-error" class="login-error" hidden></p>
+                <div class="modal-actions">
+                    <button class="btn" type="submit">Salvar</button>
                 </div>
             </form>
         </div>

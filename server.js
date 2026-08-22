@@ -18,10 +18,17 @@ const {
   requireOwner,
   redirectUri,
   usesEmailAuth,
-  isValidEmail,
-  userFromEmail,
 } = require("./src/auth");
-const { requestAdmin, decideRequest, removeAdmin, listForOwner } = require("./src/staff");
+const {
+  requestAdmin,
+  registerAndRequest,
+  loginWithPassword,
+  decideRequest,
+  removeAdmin,
+  changePassword,
+  changeEmail,
+  listForOwner,
+} = require("./src/staff");
 
 ensureDirs();
 
@@ -157,20 +164,29 @@ app.get("/api/admin/requests", requireOwner, (_req, res) => {
   res.json(listForOwner());
 });
 
-app.post("/api/admin/requests/:id/accept", requireOwner, (req, res) => {
-  const result = decideRequest(req.params.id, "accept");
+app.post("/api/admin/decide", requireOwner, (req, res) => {
+  const action = String(req.body?.action || "");
+  const id = String(req.body?.id || "");
+  const password = String(req.body?.password || "").trim();
+  const result = action === "remove" ? removeAdmin(id) : decideRequest(id, action, password);
   if (!result.ok) return res.status(400).json({ error: result.error });
-  res.json({ ok: true, ...listForOwner() });
+  res.json({ ok: true, ...listForOwner(), provisionalPassword: result.provisionalPassword || "" });
+});
+
+app.post("/api/admin/requests/:id/accept", requireOwner, (req, res) => {
+  const result = decideRequest(decodeURIComponent(req.params.id), "accept", req.body?.password);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  res.json({ ok: true, ...listForOwner(), provisionalPassword: result.provisionalPassword || "" });
 });
 
 app.post("/api/admin/requests/:id/refuse", requireOwner, (req, res) => {
-  const result = decideRequest(req.params.id, "refuse");
+  const result = decideRequest(decodeURIComponent(req.params.id), "refuse");
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true, ...listForOwner() });
 });
 
 app.post("/api/admin/admins/:id/remove", requireOwner, (req, res) => {
-  const result = removeAdmin(req.params.id);
+  const result = removeAdmin(decodeURIComponent(req.params.id));
   if (!result.ok) return res.status(400).json({ error: result.error });
   res.json({ ok: true, ...listForOwner() });
 });
@@ -217,11 +233,37 @@ app.post("/auth/email", (req, res) => {
   if (!usesEmailAuth()) {
     return res.status(404).json({ error: "Login por e-mail só está disponível na versão de teste." });
   }
-  const email = String(req.body?.email || "").trim();
-  if (!isValidEmail(email)) {
-    return res.status(400).json({ error: "Digite um e-mail válido." });
+  const result = loginWithPassword(req.body?.email, req.body?.password);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  req.session.user = result.user;
+  saveSession(req, () => res.json({ ok: true, user: toPublicUser(req.session.user) }));
+});
+
+app.post("/auth/register", (req, res) => {
+  if (!usesEmailAuth()) {
+    return res.status(404).json({ error: "Cadastro por e-mail só está disponível na versão de teste." });
   }
-  req.session.user = userFromEmail(email);
+  const password = String(req.body?.password || "");
+  const confirm = String(req.body?.confirm || req.body?.passwordConfirm || "");
+  if (password !== confirm) {
+    return res.status(400).json({ error: "A confirmação da senha não confere." });
+  }
+  const result = registerAndRequest(req.body?.email, password);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  req.session.user = result.user;
+  saveSession(req, () => res.json({ ok: true, user: toPublicUser(req.session.user) }));
+});
+
+app.post("/api/account/password", requireLogin, (req, res) => {
+  const result = changePassword(req.session.user.id, req.body?.currentPassword, req.body?.newPassword);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  res.json({ ok: true, user: toPublicUser(req.session.user) });
+});
+
+app.post("/api/account/email", requireLogin, (req, res) => {
+  const result = changeEmail(req.session.user.id, req.body?.currentPassword, req.body?.newEmail);
+  if (!result.ok) return res.status(400).json({ error: result.error });
+  req.session.user = result.user;
   saveSession(req, () => res.json({ ok: true, user: toPublicUser(req.session.user) }));
 });
 

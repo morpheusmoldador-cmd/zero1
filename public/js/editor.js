@@ -935,7 +935,7 @@
     if (!node) return null;
     if (node.nodeType !== 1) node = node.parentElement;
     if (!node || !node.closest) return null;
-    if (node.closest("#admin-bar, #modal, #staff-panel, #login-panel, #toast, [data-composer], [data-chrome]")) return null;
+    if (node.closest("#admin-bar, #modal, #staff-panel, #login-panel, #account-panel, #toast, [data-composer], [data-chrome]")) return null;
     return node.closest("#site-root p, #site-root li, #site-root h1, #site-root h2, #site-root h3, #site-root h4");
   }
 
@@ -1066,7 +1066,7 @@
     document.addEventListener("keydown", (e) => {
       if (e.key !== "Enter" || e.shiftKey || e.ctrlKey || e.metaKey || e.altKey) return;
       if (!document.body.classList.contains("editing")) return;
-      if (e.target && e.target.closest && e.target.closest("input, textarea, select, #modal, #login-panel, #staff-panel, [data-composer], #connect-box")) return;
+      if (e.target && e.target.closest && e.target.closest("input, textarea, select, #modal, #login-panel, #staff-panel, #account-panel, [data-composer], #connect-box")) return;
       const block = editBlockFrom(e.target) || editBlockFrom(window.getSelection() && window.getSelection().anchorNode);
       if (!block) return;
       e.preventDefault();
@@ -1121,6 +1121,7 @@
     } else if (!me.canEdit) {
       extra += `<button class="btn btn-ghost" type="button" id="btn-request">Pedir admin</button>`;
     }
+    extra += `<button class="btn btn-ghost" type="button" id="btn-account">Conta</button>`;
     if (me.canEdit) {
       extra += `<button class="btn" type="button" id="btn-edit">${
         document.body.classList.contains("editing") ? "Concluir" : "Editar"
@@ -1140,6 +1141,8 @@
     if (requestBtn) requestBtn.onclick = requestAccess;
     const staffBtn = document.getElementById("btn-staff");
     if (staffBtn) staffBtn.onclick = openStaffPanel;
+    const accountBtn = document.getElementById("btn-account");
+    if (accountBtn) accountBtn.onclick = openAccountPanel;
     const editBtn = document.getElementById("btn-edit");
     if (editBtn) {
       editBtn.onclick = () => {
@@ -1181,6 +1184,8 @@
     panel.hidden = false;
     const input = document.getElementById("login-email");
     input.value = "";
+    document.getElementById("login-password").value = "";
+    document.getElementById("login-password-confirm").value = "";
     setTimeout(() => input.focus(), 0);
   }
 
@@ -1192,12 +1197,13 @@
     event.preventDefault();
     const error = document.getElementById("login-error");
     const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
     error.hidden = true;
     const res = await fetch("/auth/email", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email, password }),
     });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
@@ -1208,19 +1214,57 @@
     closeLoginPanel();
     me = data.user || me;
     await refreshMe();
-    if (me.isOwner || me.canEdit) toast("Login feito. Clique em Editar para alterar o site.");
+    if (me.mustChangePassword) {
+      toast("Troque a senha provisória na sua conta.");
+      openAccountPanel();
+    } else if (me.isOwner || me.canEdit) toast("Login feito. Clique em Editar para alterar o site.");
     else if (me.requestStatus === "pending") toast("Login feito. Seu pedido de admin está em análise.");
     else toast("Login feito. Clique em Pedir admin para solicitar acesso.");
+  }
+
+  async function submitAccessRequest() {
+    const error = document.getElementById("login-error");
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+    const confirm = document.getElementById("login-password-confirm").value;
+    error.hidden = true;
+    if (!confirm) {
+      error.textContent = "Confirme a senha para pedir acesso.";
+      error.hidden = false;
+      return;
+    }
+    if (password !== confirm) {
+      error.textContent = "A confirmação da senha não confere.";
+      error.hidden = false;
+      return;
+    }
+    const res = await fetch("/auth/register", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password, confirm }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      error.textContent = data.error || "Não foi possível enviar o pedido.";
+      error.hidden = false;
+      return;
+    }
+    closeLoginPanel();
+    me = data.user || me;
+    await refreshMe();
+    toast("Pedido enviado. O dono vai ver em Cadastros.");
   }
 
   function personRow(person, actionsHtml) {
     const when = person.requestedAt || person.approvedAt || "";
     const date = when ? new Date(when).toLocaleString("pt-BR") : "";
+    const email = person.email || person.id || "";
     return `<div class="staff-row">
       <img src="${person.avatar || "https://cdn.discordapp.com/embed/avatars/0.png"}" alt="">
       <div class="meta">
-        <strong>${person.username || "Usuário"}</strong>
-        <small>${person.id}${date ? " · " + date : ""}</small>
+        <strong>${escapeHtml(email || person.username || "Usuário")}</strong>
+        <small>${escapeHtml(person.username || "")}${date ? " · " + date : ""}</small>
       </div>
       <div class="actions">${actionsHtml}</div>
     </div>`;
@@ -1230,31 +1274,34 @@
     const pending = document.getElementById("staff-pending");
     const admins = document.getElementById("staff-admins");
     const refused = document.getElementById("staff-refused");
-    pending.innerHTML = data.pending.length
-      ? data.pending
+    const pendingList = Array.isArray(data.pending) ? data.pending : [];
+    const adminList = Array.isArray(data.admins) ? data.admins : [];
+    const refusedList = Array.isArray(data.refused) ? data.refused : [];
+    pending.innerHTML = pendingList.length
+      ? pendingList
           .map(
             (p) =>
               personRow(
                 p,
-                `<button class="btn btn-ok" type="button" data-act="accept" data-id="${p.id}">Aceitar</button>
-                 <button class="btn btn-danger" type="button" data-act="refuse" data-id="${p.id}">Recusar</button>`
+                `<button class="btn btn-ok" type="button" data-act="accept" data-id="${encodeURIComponent(p.id)}">Aceitar</button>
+                 <button class="btn btn-danger" type="button" data-act="refuse" data-id="${encodeURIComponent(p.id)}">Recusar</button>`
               )
           )
           .join("")
       : `<p class="staff-empty">Nenhum pedido pendente.</p>`;
-    admins.innerHTML = data.admins.length
-      ? data.admins
+    admins.innerHTML = adminList.length
+      ? adminList
           .map(
             (p) =>
               personRow(
                 p,
-                `<button class="btn btn-danger" type="button" data-act="remove" data-id="${p.id}">Remover</button>`
+                `<button class="btn btn-danger" type="button" data-act="remove" data-id="${encodeURIComponent(p.id)}">Remover</button>`
               )
           )
           .join("")
       : `<p class="staff-empty">Nenhum admin aprovado ainda.</p>`;
-    refused.innerHTML = data.refused.length
-      ? data.refused.map((p) => personRow(p, "")).join("")
+    refused.innerHTML = refusedList.length
+      ? refusedList.map((p) => personRow(p, "")).join("")
       : `<p class="staff-empty">Ninguém recusado.</p>`;
   }
 
@@ -1267,18 +1314,112 @@
     panel.hidden = false;
   }
 
-  async function staffAction(act, id) {
-    const routes = {
-      accept: `/api/admin/requests/${encodeURIComponent(id)}/accept`,
-      refuse: `/api/admin/requests/${encodeURIComponent(id)}/refuse`,
-      remove: `/api/admin/admins/${encodeURIComponent(id)}/remove`,
-    };
-    const res = await fetch(routes[act], { method: "POST", credentials: "include" });
+  async function staffAction(act, encodedId) {
+    const id = decodeURIComponent(encodedId || "");
+    let password = "";
+    if (act === "accept") {
+      const values = await openModal("Aceitar admin", [
+        {
+          name: "password",
+          label: "Senha provisória (opcional). Vazio mantém a senha que a pessoa cadastrou",
+          value: "",
+          placeholder: "Ex.: zer01temp",
+        },
+      ]);
+      if (!values) return;
+      password = (values.password || "").trim();
+    }
+    const res = await fetch("/api/admin/decide", {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: act === "remove" ? "remove" : act, id, password }),
+    });
     const data = await res.json().catch(() => ({}));
     if (!res.ok) return toast(data.error || "Não foi possível atualizar");
     fillStaffLists(data);
-    toast(act === "accept" ? "Admin aceito" : act === "refuse" ? "Pedido recusado" : "Admin removido");
+    if (data.provisionalPassword) {
+      await openModal("Senha provisória", [
+        { name: "password", label: "Envie esta senha para a pessoa. Ela poderá trocar depois em Conta", value: data.provisionalPassword },
+      ]);
+    } else {
+      toast(act === "accept" ? "Admin aceito" : act === "refuse" ? "Pedido recusado" : "Admin removido");
+    }
     await refreshMe();
+  }
+
+  function openAccountPanel() {
+    const panel = document.getElementById("account-panel");
+    const error = document.getElementById("account-error");
+    const hint = document.getElementById("account-hint");
+    error.hidden = true;
+    error.textContent = "";
+    document.getElementById("account-email").value = me.email || me.id || "";
+    document.getElementById("account-current").value = "";
+    document.getElementById("account-password").value = "";
+    document.getElementById("account-password-confirm").value = "";
+    hint.textContent = me.mustChangePassword
+      ? "Você está com senha provisória. Troque a senha para continuar com segurança."
+      : "Altere seu e-mail ou sua senha. A senha atual é obrigatória para confirmar.";
+    document.getElementById("account-email").readOnly = Boolean(me.isOwner);
+    panel.hidden = false;
+    setTimeout(() => document.getElementById("account-current").focus(), 0);
+  }
+
+  function closeAccountPanel() {
+    document.getElementById("account-panel").hidden = true;
+  }
+
+  async function submitAccount(event) {
+    event.preventDefault();
+    const error = document.getElementById("account-error");
+    const email = document.getElementById("account-email").value.trim();
+    const currentPassword = document.getElementById("account-current").value;
+    const newPassword = document.getElementById("account-password").value;
+    const confirm = document.getElementById("account-password-confirm").value;
+    const currentEmail = String(me.email || me.id || "").toLowerCase();
+    error.hidden = true;
+    if (newPassword && newPassword !== confirm) {
+      error.textContent = "A confirmação da nova senha não confere.";
+      error.hidden = false;
+      return;
+    }
+    const emailChanged = Boolean(email && email.toLowerCase() !== currentEmail && !me.isOwner);
+    if (!newPassword && !emailChanged) {
+      error.textContent = "Informe a nova senha ou um e-mail diferente.";
+      error.hidden = false;
+      return;
+    }
+    try {
+      if (emailChanged) {
+        const res = await fetch("/api/account/email", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPassword, newEmail: email }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Não foi possível trocar o e-mail.");
+        me = data.user || me;
+      }
+      if (newPassword) {
+        const res = await fetch("/api/account/password", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ currentPassword, newPassword }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Não foi possível trocar a senha.");
+        me = data.user || me;
+      }
+      closeAccountPanel();
+      await refreshMe();
+      toast("Conta atualizada");
+    } catch (err) {
+      error.textContent = err.message;
+      error.hidden = false;
+    }
   }
 
   async function boot() {
@@ -1296,6 +1437,12 @@
       if (e.target.id === "login-panel") closeLoginPanel();
     });
     document.getElementById("login-form").addEventListener("submit", submitEmailLogin);
+    document.getElementById("login-request").onclick = submitAccessRequest;
+    document.getElementById("account-close").onclick = closeAccountPanel;
+    document.getElementById("account-panel").addEventListener("click", (e) => {
+      if (e.target.id === "account-panel") closeAccountPanel();
+    });
+    document.getElementById("account-form").addEventListener("submit", submitAccount);
 
     const [meRes, siteRes] = await Promise.all([
       fetch("/api/me", { credentials: "include" }),
@@ -1313,6 +1460,7 @@
     if (window.bootSiteRouting) window.bootSiteRouting();
     renderVipButtons();
     renderConnectBox();
+    if (me.mustChangePassword) openAccountPanel();
 
     const params = new URLSearchParams(location.search);
     if (params.get("login") === "ok") {

@@ -1,7 +1,7 @@
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");
-const { isApprovedAdmin, getRequest, pendingCount } = require("./staff");
+const { isApprovedAdmin, getRequest, getAccount, pendingCount } = require("./staff");
 
 const OWNER_ID = process.env.OWNER_ID || "1228740417839824968";
 const OWNER_EMAIL = String(process.env.OWNER_EMAIL || "morpheus.moldador@gmail.com")
@@ -39,8 +39,8 @@ function isOwner(userId) {
 
 function isAdmin(userId) {
   if (!userId) return false;
-  const id = String(userId);
-  return isOwner(id) || extraAdminIds().includes(id) || isApprovedAdmin(id);
+  const id = usesEmailAuth() ? normalizeEmail(userId) : String(userId);
+  return isOwner(id) || extraAdminIds().includes(String(userId)) || extraAdminIds().includes(id) || isApprovedAdmin(id);
 }
 
 function avatarUrl(user) {
@@ -146,15 +146,18 @@ function toPublicUser(sessionUser) {
   const authMode = usesEmailAuth() ? "email" : "discord";
   if (!sessionUser) return { loggedIn: false, canEdit: false, isOwner: false, authMode };
   const request = getRequest(sessionUser.id);
+  const account = getAccount(sessionUser.id);
   return {
     loggedIn: true,
     canEdit: isAdmin(sessionUser.id),
     id: sessionUser.id,
+    email: sessionUser.email || sessionUser.id,
     username: sessionUser.global_name || sessionUser.username,
     avatar: avatarUrl(sessionUser),
     isOwner: isOwner(sessionUser.id),
     requestStatus: isAdmin(sessionUser.id) ? "admin" : (request && request.status) || "none",
     pendingCount: isOwner(sessionUser.id) ? pendingCount() : 0,
+    mustChangePassword: Boolean(account && account.mustChangePassword),
     authMode,
   };
 }

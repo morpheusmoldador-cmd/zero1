@@ -690,7 +690,8 @@ body.editing .add-card-dock {
 .staff-row strong { display: block; font-size: 0.9rem; }
 .staff-row small { color: var(--text-dim); font-size: 0.75rem; }
 .staff-row .actions { display: flex; gap: 6px; flex-wrap: wrap; }
-#login-form label {
+#login-form label,
+#account-form label {
     display: block;
     font-size: 0.75rem;
     color: var(--text-dim);
@@ -698,7 +699,10 @@ body.editing .add-card-dock {
     text-transform: uppercase;
     letter-spacing: 0.08em;
 }
-#login-form input[type="email"] {
+#login-form input[type="email"],
+#login-form input[type="password"],
+#account-form input[type="email"],
+#account-form input[type="password"] {
     width: 100%;
     background: #1a1a1a;
     border: 1px solid #333;
@@ -707,6 +711,7 @@ body.editing .add-card-dock {
     border-radius: 10px;
     font-family: inherit;
     font-size: 1rem;
+    margin-bottom: 10px;
 }
 .login-error {
     color: #fca5a5;
